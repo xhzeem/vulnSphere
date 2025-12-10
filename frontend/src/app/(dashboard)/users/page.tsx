@@ -112,15 +112,6 @@ export default function UsersPage() {
                         className="pl-8"
                     />
                 </div>
-                <div className="relative flex-1">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search users..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-8"
-                    />
-                </div>
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="All Roles" />

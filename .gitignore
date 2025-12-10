@@ -93,3 +93,7 @@ docker-compose.override.yml
 
 # Git
 *.orig
+
+# API Media
+api/media/generated_reports/
+api/media/attachments/

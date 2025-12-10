@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Pencil, ExternalLink } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { RetestCard } from '@/components/vulnerabilities/retest-card';
 
 interface Vulnerability {
     id: string;
@@ -189,6 +190,14 @@ export default function VulnerabilityViewPage() {
                         </ul>
                     </CardContent>
                 </Card>
+            )}
+
+            {companyId && projectId && vulnId && (
+                <RetestCard
+                    companyId={companyId}
+                    projectId={projectId}
+                    vulnerabilityId={vulnId}
+                />
             )}
         </div>
     );

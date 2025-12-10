@@ -14,9 +14,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VulnerabilityDeleteDialog } from '@/components/vulnerabilities/vulnerability-delete-dialog';
 import { VulnerabilityCloneDialog } from '@/components/vulnerabilities/vulnerability-clone-dialog';
-import { ArrowLeft, Plus, Pencil, Trash2, Copy, Shield, Search, Eye } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Copy, Shield, Search, Eye, Save, X } from 'lucide-react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
+import { MDXEditorComponent } from '@/components/mdx-editor';
+import { format } from 'date-fns';
+import { Label } from '@/components/ui/label';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -57,6 +60,10 @@ export default function ProjectDetailPage() {
     const projectId = params.projectId as string;
 
     const [project, setProject] = useState<Project | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editFormData, setEditFormData] = useState<Partial<Project>>({});
+    const [saving, setSaving] = useState(false);
+
     const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([]);
     const [assets, setAssets] = useState<Asset[]>([]);
     const [allAssets, setAllAssets] = useState<Asset[]>([]);
@@ -158,6 +165,36 @@ export default function ProjectDetailPage() {
         }
     };
 
+    const handleSaveProject = async () => {
+        if (!project) return;
+        setSaving(true);
+        try {
+            const res = await api.patch(`/projects/${projectId}/`, editFormData);
+            setProject(res.data);
+            setIsEditing(false);
+        } catch (err) {
+            console.error('Failed to update project', err);
+            setError('Failed to update project');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const toggleEdit = () => {
+        if (project) {
+            setEditFormData({
+                title: project.title,
+                engagement_type: project.engagement_type,
+                status: project.status,
+                start_date: project.start_date,
+                end_date: project.end_date,
+                summary: project.summary,
+                scope_description: project.scope_description // if needed
+            });
+            setIsEditing(true);
+        }
+    };
+
     const getSeverityColor = (severity: string) => {
         switch (severity) {
             case 'CRITICAL': return 'destructive';
@@ -217,17 +254,44 @@ export default function ProjectDetailPage() {
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{project.title}</h1>
-                        <p className="text-muted-foreground">{project.engagement_type}</p>
+                        {isEditing ? (
+                            <Input
+                                value={editFormData.title || ''}
+                                onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                                className="text-2xl font-bold h-10 w-full"
+                            />
+                        ) : (
+                            <h1 className="text-3xl font-bold tracking-tight">{project.title}</h1>
+                        )}
+                        {isEditing ? (
+                            <Input
+                                value={editFormData.engagement_type || ''}
+                                onChange={(e) => setEditFormData({ ...editFormData, engagement_type: e.target.value })}
+                                className="mt-1 h-8 w-full"
+                                placeholder="Engagement Type"
+                            />
+                        ) : (
+                            <p className="text-muted-foreground">{project.engagement_type}</p>
+                        )}
                     </div>
                 </div>
-                <Button variant="outline" onClick={() => {
-                    // TODO: Implement project edit dialog
-                    alert('Project edit dialog coming soon');
-                }}>
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Edit Project
-                </Button>
+                {isEditing ? (
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setIsEditing(false)} disabled={saving}>
+                            <X className="mr-2 h-4 w-4" />
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSaveProject} disabled={saving}>
+                            <Save className="mr-2 h-4 w-4" />
+                            {saving ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                    </div>
+                ) : (
+                    <Button variant="outline" onClick={toggleEdit}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit Project
+                    </Button>
+                )}
             </div>
 
             <Card>
@@ -236,21 +300,66 @@ export default function ProjectDetailPage() {
                         <div>
                             <CardTitle>Project Details</CardTitle>
                             <CardDescription>
-                                {new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}
+                                {isEditing ? (
+                                    <div className="flex gap-2 mt-2">
+                                        <Input
+                                            type="date"
+                                            value={editFormData.start_date || ''}
+                                            onChange={(e) => setEditFormData({ ...editFormData, start_date: e.target.value })}
+                                        />
+                                        <span className="self-center">-</span>
+                                        <Input
+                                            type="date"
+                                            value={editFormData.end_date || ''}
+                                            onChange={(e) => setEditFormData({ ...editFormData, end_date: e.target.value })}
+                                        />
+                                    </div>
+                                ) : (
+                                    <span>
+                                        {new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}
+                                    </span>
+                                )}
                             </CardDescription>
                         </div>
-                        <Badge variant={getStatusColor(project.status)}>
-                            {project.status.replace('_', ' ')}
-                        </Badge>
+                        {isEditing ? (
+                            <Select
+                                value={editFormData.status || project.status}
+                                onValueChange={(v) => setEditFormData({ ...editFormData, status: v })}
+                            >
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="DRAFT">Draft</SelectItem>
+                                    <SelectItem value="IN_REVIEW">In Review</SelectItem>
+                                    <SelectItem value="FINAL">Final</SelectItem>
+                                    <SelectItem value="ARCHIVED">Archived</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        ) : (
+                            <Badge variant={getStatusColor(project.status)}>
+                                {project.status.replace('_', ' ')}
+                            </Badge>
+                        )}
                     </div>
                 </CardHeader>
-                {project.summary && (
-                    <CardContent>
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <ReactMarkdown>{project.summary}</ReactMarkdown>
+                <CardContent>
+                    {isEditing ? (
+                        <div className="space-y-2">
+                            <Label>Summary</Label>
+                            <MDXEditorComponent
+                                value={editFormData.summary || ''}
+                                onChange={(v) => setEditFormData({ ...editFormData, summary: v })}
+                            />
                         </div>
-                    </CardContent>
-                )}
+                    ) : (
+                        project.summary && (
+                            <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <ReactMarkdown>{project.summary}</ReactMarkdown>
+                            </div>
+                        )
+                    )}
+                </CardContent>
             </Card>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

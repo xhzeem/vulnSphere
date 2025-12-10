@@ -16,8 +16,10 @@ import { ProjectDeleteDialog } from '@/components/projects/project-delete-dialog
 import { AssetCreateDialog } from '@/components/assets/asset-create-dialog';
 import { AssetEditDialog } from '@/components/assets/asset-edit-dialog';
 import { AssetDeleteDialog } from '@/components/assets/asset-delete-dialog';
-import { Plus, FileText, Server, Pencil, Trash2, Eye } from 'lucide-react';
+import { Plus, FileText, Server, Pencil, Trash2, Eye, Save, X } from 'lucide-react';
 import Link from 'next/link';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -76,6 +78,11 @@ export default function CompanyDetailPage() {
     const [assetDeleteDialogOpen, setAssetDeleteDialogOpen] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
     const [assetPage, setAssetPage] = useState(1);
+
+    // Edit State
+    const [isEditing, setIsEditing] = useState(false);
+    const [editFormData, setEditFormData] = useState<Partial<Company>>({});
+    const [saving, setSaving] = useState(false);
 
     // Tab state
     const [activeTab, setActiveTab] = useState('projects');
@@ -146,6 +153,34 @@ export default function CompanyDetailPage() {
         return labels[type] || type;
     };
 
+    const handleSaveCompany = async () => {
+        if (!company) return;
+        setSaving(true);
+        try {
+            const res = await api.patch(`/companies/${companyId}/`, editFormData);
+            setCompany(res.data);
+            setIsEditing(false);
+        } catch (err) {
+            console.error('Failed to update company', err);
+            setError('Failed to update company');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const toggleEdit = () => {
+        if (company) {
+            setEditFormData({
+                name: company.name,
+                contact_email: company.contact_email,
+                address: company.address,
+                notes: company.notes,
+                is_active: company.is_active
+            });
+            setIsEditing(true);
+        }
+    };
+
     if (loading) {
         return (
             <div className="space-y-6">
@@ -175,9 +210,47 @@ export default function CompanyDetailPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">{company.name}</h1>
-                <p className="text-muted-foreground">{company.contact_email}</p>
+            <div className="flex items-center justify-between">
+                <div className="flex-1 mr-4">
+                    {isEditing ? (
+                        <div className="space-y-2">
+                            <Input
+                                value={editFormData.name || ''}
+                                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                className="text-3xl font-bold h-12 w-full"
+                                placeholder="Company Name"
+                            />
+                            <Input
+                                value={editFormData.contact_email || ''}
+                                onChange={(e) => setEditFormData({ ...editFormData, contact_email: e.target.value })}
+                                className="w-full max-w-md"
+                                placeholder="Contact Email"
+                            />
+                        </div>
+                    ) : (
+                        <>
+                            <h1 className="text-3xl font-bold tracking-tight">{company.name}</h1>
+                            <p className="text-muted-foreground">{company.contact_email}</p>
+                        </>
+                    )}
+                </div>
+                {isEditing ? (
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setIsEditing(false)} disabled={saving}>
+                            <X className="mr-2 h-4 w-4" />
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSaveCompany} disabled={saving}>
+                            <Save className="mr-2 h-4 w-4" />
+                            {saving ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                    </div>
+                ) : (
+                    <Button variant="outline" onClick={toggleEdit}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit Company
+                    </Button>
+                )}
             </div>
 
             <Card>
@@ -185,18 +258,30 @@ export default function CompanyDetailPage() {
                     <CardTitle>Company Information</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-4">
-                    {company.address && (
-                        <div>
-                            <span className="text-sm font-medium">Address:</span>
-                            <p className="text-sm text-muted-foreground">{company.address}</p>
-                        </div>
-                    )}
-                    {company.notes && (
-                        <div>
-                            <span className="text-sm font-medium">Notes:</span>
-                            <p className="text-sm text-muted-foreground">{company.notes}</p>
-                        </div>
-                    )}
+                    <div>
+                        <span className="text-sm font-medium">Address:</span>
+                        {isEditing ? (
+                            <Textarea
+                                value={editFormData.address || ''}
+                                onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                                placeholder="Address"
+                            />
+                        ) : (
+                            <p className="text-sm text-muted-foreground">{company.address || 'N/A'}</p>
+                        )}
+                    </div>
+                    <div>
+                        <span className="text-sm font-medium">Notes:</span>
+                        {isEditing ? (
+                            <Textarea
+                                value={editFormData.notes || ''}
+                                onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                                placeholder="Internal Notes"
+                            />
+                        ) : (
+                            <p className="text-sm text-muted-foreground">{company.notes || 'N/A'}</p>
+                        )}
+                    </div>
                     <div>
                         <span className="text-sm font-medium">Status:</span>
                         <Badge variant={company.is_active ? 'outline' : 'secondary'} className="ml-2">
@@ -412,5 +497,6 @@ export default function CompanyDetailPage() {
                 onSuccess={fetchCompanyData}
             />
         </div>
+
     );
 }
