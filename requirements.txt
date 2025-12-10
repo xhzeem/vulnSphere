@@ -1,0 +1,8 @@
+Django>=5.0
+djangorestframework
+djangorestframework-simplejwt
+drf-spectacular
+python-dotenv
+django-filter
+drf-nested-routers
+django-cors-headers
