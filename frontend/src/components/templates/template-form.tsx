@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Save, Plus, X, Calculator } from 'lucide-react';
-import { MDXEditorComponent } from '@/components/mdx-editor';
+import { MDXEditorComponent } from '@/components/md-editor';
 import { SeverityBadge } from '@/components/vulnerabilities/severity-badge';
 import { CVSSCalculator } from '@/components/vulnerabilities/cvss-calculator';
 
@@ -265,6 +265,10 @@ export function TemplateForm({ templateId, mode }: TemplateFormProps) {
                         onChange={(value) => setFormData({ ...formData, details_md: value })}
                         placeholder="Use markdown with sections..."
                         onUpload={handleUpload}
+                        projectId={undefined}
+                        companyId={undefined}
+                        context="template"
+                        height={600}
                     />
                 </CardContent>
             </Card>

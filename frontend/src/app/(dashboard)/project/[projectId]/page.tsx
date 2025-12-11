@@ -17,7 +17,7 @@ import { VulnerabilityCloneDialog } from '@/components/vulnerabilities/vulnerabi
 import { ArrowLeft, Plus, Pencil, Trash2, Copy, Shield, Search, Eye, Save, X, FileText, Minus } from 'lucide-react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
-import { MDXEditorComponent } from '@/components/mdx-editor';
+import { MDXEditorComponent } from '@/components/md-editor';
 import { format } from 'date-fns';
 import { Label } from '@/components/ui/label';
 import {

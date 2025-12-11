@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { forwardRef } from 'react';
-import { MDXEditorMethods } from '@mdxeditor/editor';
+import { MDXEditorMethods } from './md-editor-client';
 
 // Define Props that match the client component
 interface MDXEditorProps {
@@ -11,9 +11,15 @@ interface MDXEditorProps {
     placeholder?: string;
     className?: string;
     onUpload?: (file: File) => Promise<string>;
+    onImageUploaded?: () => void;
+    projectId?: string;
+    companyId?: string;
+    vulnerabilityId?: string;
+    context?: 'vulnerability' | 'template' | 'other';
+    height?: number;
 }
 
-const Editor = dynamic(() => import('./mdx-editor-client').then(mod => mod.MDXEditorComponent), {
+const Editor = dynamic(() => import('./md-editor-client').then(mod => mod.MDXEditorComponent), {
     ssr: false,
     loading: () => <div className="border rounded-md p-4 bg-muted animate-pulse h-[150px]" />
 });

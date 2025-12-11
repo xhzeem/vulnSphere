@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock, Save, X, Pencil, History, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { MDXEditorComponent } from '@/components/mdx-editor';
+import { MDXEditorComponent } from '@/components/md-editor';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -28,9 +28,10 @@ interface RetestCardProps {
     companyId: string;
     projectId: string;
     vulnerabilityId: string;
+    onImageUploaded?: () => void; // Callback for when images are uploaded
 }
 
-export function RetestCard({ companyId, projectId, vulnerabilityId }: RetestCardProps) {
+export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploaded }: RetestCardProps) {
     const { canEdit } = useAuth();
     const [retests, setRetests] = useState<Retest[]>([]);
     const [loading, setLoading] = useState(true);
@@ -244,6 +245,12 @@ export function RetestCard({ companyId, projectId, vulnerabilityId }: RetestCard
                                 value={notes}
                                 onChange={setNotes}
                                 placeholder={requestType === 'RETEST' ? "Describe validation steps..." : "Describe request..."}
+                                companyId={companyId}
+                                projectId={projectId}
+                                vulnerabilityId={vulnerabilityId}
+                                onImageUploaded={onImageUploaded}
+                                context="vulnerability"
+                                height={300}
                             />
                         </div>
 
@@ -268,8 +275,8 @@ export function RetestCard({ companyId, projectId, vulnerabilityId }: RetestCard
                     </div>
                 ) : (
                     <div className="relative space-y-4">
-                        {/* Purple Timeline line */}
-                        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-purple-500/30" />
+                        {/* Gray Timeline line */}
+                        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-500/30" />
 
                         {retests.map((retest, index) => (
                             <div key={retest.id} className="relative flex gap-4">
