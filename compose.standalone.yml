@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15
+    container_name: vulnsphere-db
+    environment:
+      POSTGRES_DB: vulnsphere
+      POSTGRES_USER: vulnsphere
+      POSTGRES_PASSWORD: vulnsphere123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vulnsphere"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # API Service (using GitHub Container Registry image)
+  api:
+    image: ghcr.io/xhzeem/vulnsphere-api:latest
+    container_name: vulnsphere-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://vulnsphere:vulnsphere123@db:5432/vulnsphere
+      - SECRET_KEY=django-insecure-change-me-in-production
+      - ALLOWED_HOSTS=localhost,127.0.0.1,api
+    volumes:
+      - api_media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Frontend Service (using GitHub Container Registry image)
+  frontend:
+    image: ghcr.io/xhzeem/vulnsphere-frontend:latest
+    container_name: vulnsphere-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  api_media:

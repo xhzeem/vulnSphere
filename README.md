@@ -29,7 +29,7 @@ A comprehensive multi-tenant vulnerability reporting and management platform bui
 - **Security Focus**: CVSS scoring, severity classification, and remediation tracking
 
 ## 📸 Screenshot
-![VulnSphere](https://ibb.co/HfZwpjrX)
+![Screenshot](https://i.postimg.cc/pVB3w2bm/Screenshot-2025-12-11-at-10-02-18-PM.png)
 
 ## 🛠️ Installation
 
@@ -40,12 +40,11 @@ A comprehensive multi-tenant vulnerability reporting and management platform bui
 
 ### Quick Start
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/VulnSphere.git
-cd VulnSphere
+# Download the compose file
+wget https://raw.githubusercontent.com/xhzeem/VulnSphere/main/compose.standalone.yml
 
 # Start all services
-docker compose up --build -d
+docker compose -f compose.standalone.yml up -d
 
 # Access the application
 # Frontend: http://localhost:3000
@@ -168,7 +167,7 @@ POST /api/v1/projects/
 3. GitHub Actions will automatically build and deploy
 
 # Manual Deployment
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f compose.standalone.yaml up -d
 ```
 
 ### GitHub Container Registry
