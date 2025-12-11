@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" width="300" height="80" preserveAspectRatio="xMidYMid meet">
+  <g transform="translate(15, 10)">
+    <path d="M30,5 A25,25 0 0,0 30,55" fill="none" stroke="#0A2342" stroke-width="6" stroke-linecap="round"/>
+    
+    <path d="M30,55 A25,25 0 0,0 30,5" fill="none" stroke="#00A8E8" stroke-width="6" stroke-linecap="round"/>
+    
+    <circle cx="30" cy="30" r="7" fill="#00A8E8"/>
+  </g>
+  
+  <g transform="translate(85, 51)">
+    <text font-family="'-apple-system', 'BlinkMacSystemFont', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="34" letter-spacing="-0.5">
+      <tspan font-weight="800" fill="#0A2342">Vuln</tspan><tspan font-weight="300" fill="#0A2342">Sphere</tspan>
+    </text>
+  </g>
+</svg>

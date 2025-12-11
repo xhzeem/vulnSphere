@@ -11,6 +11,7 @@ import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { User, fetchCurrentUser, isAdmin } from '@/lib/auth-utils';
+import { VulnSphereLogo } from '@/components/layout/logo';
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> { }
 
@@ -40,9 +41,9 @@ export function Sidebar({ className }: SidebarProps) {
         <div className={cn("pb-12 w-64 border-r bg-card relative", className)}>
             <div className="space-y-4 py-4">
                 <div className="px-3 py-2">
-                    <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-                        VulnSphere
-                    </h2>
+                    <div className="mb-4 px-4">
+                        <VulnSphereLogo className="h-20 w-auto max-w-full object-contain" />
+                    </div>
                     <div className="space-y-1">
                         <Button variant={pathname === '/dashboard' ? 'secondary' : 'ghost'} className="w-full justify-start" asChild>
                             <Link href="/dashboard">

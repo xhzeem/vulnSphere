@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { fetchCurrentUser } from '@/lib/auth-utils';
+import { VulnSphereLogo } from '@/components/layout/logo';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -82,46 +83,51 @@ export default function LoginPage() {
 
     return (
         <div className="flex h-screen w-full items-center justify-center bg-muted/40">
-            <Card className="w-full max-w-sm">
-                <CardHeader>
-                    <CardTitle className="text-2xl">Login</CardTitle>
-                    <CardDescription>Enter your email or username and password to access your account</CardDescription>
-                </CardHeader>
-                <form onSubmit={handleLogin}>
-                    <CardContent className="grid gap-4">
-                        {error && (
-                            <Alert variant="destructive">
-                                <AlertDescription>{error}</AlertDescription>
-                            </Alert>
-                        )}
-                        <div className="grid gap-2">
-                            <Label htmlFor="email">Email or Username</Label>
-                            <Input
-                                id="email"
-                                required
-                                placeholder="email@example.com or username"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                        <Button className="w-full" type="submit" disabled={loading}>
-                            {loading ? 'Signing in...' : 'Sign in'}
-                        </Button>
-                    </CardFooter>
-                </form>
-            </Card>
+            <div className="w-full max-w-sm space-y-6">
+                <div className="flex justify-center">
+                    <VulnSphereLogo className="h-16 w-auto max-w-full object-contain" />
+                </div>
+                <Card className="w-full">
+                    <CardHeader>
+                        <CardTitle className="text-2xl">Login</CardTitle>
+                        <CardDescription>Enter your email or username and password to access your account</CardDescription>
+                    </CardHeader>
+                    <form onSubmit={handleLogin}>
+                        <CardContent className="grid gap-4">
+                            {error && (
+                                <Alert variant="destructive">
+                                    <AlertDescription>{error}</AlertDescription>
+                                </Alert>
+                            )}
+                            <div className="grid gap-2">
+                                <Label htmlFor="email">Email or Username</Label>
+                                <Input
+                                    id="email"
+                                    required
+                                    placeholder="email@example.com or username"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="password">Password</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                            <Button className="w-full" type="submit" disabled={loading}>
+                                {loading ? 'Signing in...' : 'Sign in'}
+                            </Button>
+                        </CardFooter>
+                    </form>
+                </Card>
+            </div>
         </div>
     );
 }

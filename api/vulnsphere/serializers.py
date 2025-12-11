@@ -162,7 +162,9 @@ class RetestSerializer(serializers.ModelSerializer):
         if request_type == 'RETEST':
             validated_data['performed_by'] = user
         
-        return Retest.objects.create(vulnerability=vulnerability, **validated_data)
+        retest = Retest.objects.create(vulnerability=vulnerability, **validated_data)
+        return retest
+
 
 class VulnerabilityAssetSerializer(serializers.ModelSerializer):
     asset_details = AssetSerializer(source='asset', read_only=True)
@@ -190,26 +192,17 @@ class VulnerabilityAssetSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source='author.name', read_only=True)
+    
     class Meta:
         model = Comment
-        fields = ['id', 'company', 'project', 'vulnerability', 'retest', 'author', 'body_md', 
-                  'is_internal', 'created_at', 'updated_at']
-        read_only_fields = ['company', 'author', 'project', 'vulnerability', 'retest']
+        fields = ['id', 'company', 'project', 'vulnerability', 'retest', 'author', 'author_name', 
+                  'body_md', 'is_internal', 'created_at', 'updated_at']
+        read_only_fields = ['author', 'author_name']
 
     def create(self, validated_data):
-        user = self.context['request'].user
-        company = self.context.get('company')
-        if not company:
-            raise serializers.ValidationError("Company context required.")
-            
-        validated_data['author'] = user
-        validated_data['company'] = company
-        
-        # Linking logic handled in viewset usually, but here just robust defaults
-        if 'project' in self.context: validated_data['project'] = self.context['project']
-        if 'vulnerability' in self.context: validated_data['vulnerability'] = self.context['vulnerability']
-        if 'retest' in self.context: validated_data['retest'] = self.context['retest']
-
+        # Author is set from request user
+        validated_data['author'] = self.context['request'].user
         return super().create(validated_data)
 
 class AttachmentSerializer(serializers.ModelSerializer):

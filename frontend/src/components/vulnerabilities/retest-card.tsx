@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock, Save, X, Pencil } from 'lucide-react';
-import { format } from 'date-fns';
+import { Plus, RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock, Save, X, Pencil, History } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 import { MDXEditorComponent } from '@/components/mdx-editor';
 import ReactMarkdown from 'react-markdown';
+import { useAuth } from '@/hooks/use-auth';
 
 interface Retest {
     id: string;
@@ -30,6 +31,7 @@ interface RetestCardProps {
 }
 
 export function RetestCard({ companyId, projectId, vulnerabilityId }: RetestCardProps) {
+    const { canEdit } = useAuth();
     const [retests, setRetests] = useState<Retest[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAdding, setIsAdding] = useState(false);
@@ -75,29 +77,12 @@ export function RetestCard({ companyId, projectId, vulnerabilityId }: RetestCard
                 await api.post(`/companies/${companyId}/projects/${projectId}/vulnerabilities/${vulnerabilityId}/retests/`, payload);
             }
 
-            // Clear fields specifically requested by user ("also when saving clear the fields")
-            // And reset state
             setNotes('');
+            setRequestType('RETEST');
+            setStatus('PASSED');
             setEditingRetestId(null);
+            setIsAdding(false);
 
-            // Should we keep adding? User said "can keep adding multiple".
-            // If we just EDITED, we probably want to close the form.
-            // If we ADDED, we might want to keep it open or close it. 
-            // The user's request "retest could be edited, also when saving clear the fields" 
-            // implies clearing is important. 
-            // Let's keep it simple: If editing, close form. If adding, clear fields but keep form open OR close form?
-            // "button to add a new retest etc.. and can keep adding multiple" suggests sticking to addition workflow.
-            // But usually "clear fields" implies getting ready for the NEXT one.
-            // So for Add mode: Clear fields, stay open (or close? let's stick to previous: clear fields, stay open).
-            // For Edit mode: Close form.
-
-            if (editingRetestId) {
-                setIsAdding(false);
-            } else {
-                // Reset defaults for next add
-                setRequestType('RETEST');
-                setStatus('PASSED');
-            }
             fetchRetests();
         } catch (error) {
             console.error('Failed to save retest', error);
@@ -144,130 +129,184 @@ export function RetestCard({ companyId, projectId, vulnerabilityId }: RetestCard
         }
     };
 
+    const getTimelineColor = (retest: Retest) => {
+        // For REQUEST type, use purple
+        if (retest.request_type === 'REQUEST') {
+            return 'bg-purple-500';
+        }
+
+        // For RETEST, base on status
+        if (retest.request_type === 'RETEST') {
+            switch (retest.status) {
+                case 'PASSED': return 'bg-green-500';
+                case 'FAILED': return 'bg-red-500';
+                case 'PARTIAL': return 'bg-yellow-500';
+                default: return 'bg-gray-500';
+            }
+        }
+
+        // INITIAL or other
+        return 'bg-blue-500';
+    };
+
+    const getTimelineIcon = (retest: Retest) => {
+        if (retest.request_type === 'REQUEST') {
+            return <Clock className="h-4 w-4 text-white" />;
+        }
+
+        if (retest.request_type === 'RETEST') {
+            switch (retest.status) {
+                case 'PASSED': return <CheckCircle2 className="h-4 w-4 text-white" />;
+                case 'FAILED': return <XCircle className="h-4 w-4 text-white" />;
+                case 'PARTIAL': return <AlertCircle className="h-4 w-4 text-white" />;
+                default: return <Clock className="h-4 w-4 text-white" />;
+            }
+        }
+
+        return <History className="h-4 w-4 text-white" />;
+    };
+
     if (loading) {
         return <div className="text-sm text-muted-foreground">Loading retest history...</div>;
     }
 
     return (
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <div className="flex items-center gap-2">
+                    <History className="h-5 w-5" />
                     <CardTitle>Retest History</CardTitle>
-                    <CardDescription>Track validation attempts and status changes</CardDescription>
+                    <Badge variant="outline">{retests.length}</Badge>
                 </div>
-                {!isAdding && (
-                    <Button size="sm" onClick={() => {
-                        handleCancel(); // Clear any previous edit state
-                        setIsAdding(true);
-                    }}>
+                {!isAdding && canEdit && (
+                    <Button size="sm" onClick={() => setIsAdding(true)}>
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Retest
+                        Add Entry
                     </Button>
                 )}
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
+                {/* Add New Entry Form */}
                 {isAdding && (
-                    <Card className="border-dashed">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-base">{editingRetestId ? 'Edit Retest' : 'New Retest Entry'}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                    <div className="border-2 border-dashed rounded-lg p-4 space-y-4 bg-muted/20">
+                        <h3 className="font-semibold">{editingRetestId ? 'Edit Entry' : 'New Entry'}</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Entry Type</Label>
+                                <Select
+                                    value={requestType}
+                                    onValueChange={(v: 'INITIAL' | 'REQUEST' | 'RETEST') => setRequestType(v)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="RETEST">Record Retest Result</SelectItem>
+                                        <SelectItem value="REQUEST">Request Retest</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {requestType === 'RETEST' && (
                                 <div className="space-y-2">
-                                    <Label>Entry Type</Label>
+                                    <Label>Outcome</Label>
                                     <Select
-                                        value={requestType}
-                                        onValueChange={(v: 'INITIAL' | 'REQUEST' | 'RETEST') => setRequestType(v)}
-                                        disabled={requestType === 'INITIAL'} // distinct initial findings usually shouldn't change type manualy
+                                        value={status || ''}
+                                        onValueChange={(v: any) => setStatus(v)}
                                     >
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="RETEST">Record Retest Result</SelectItem>
-                                            <SelectItem value="REQUEST">Request Retest</SelectItem>
-                                            {requestType === 'INITIAL' && <SelectItem value="INITIAL">Initial Finding</SelectItem>}
+                                            <SelectItem value="PASSED">Passed (Fixed)</SelectItem>
+                                            <SelectItem value="FAILED">Failed (Still Vulnerable)</SelectItem>
+                                            <SelectItem value="PARTIAL">Partial Fix</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
+                            )}
+                        </div>
 
-                                {requestType === 'RETEST' && (
-                                    <div className="space-y-2">
-                                        <Label>Outcome</Label>
-                                        <Select
-                                            value={status || ''}
-                                            onValueChange={(v: any) => setStatus(v)}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="PASSED">Passed (Fixed)</SelectItem>
-                                                <SelectItem value="FAILED">Failed (Still Vulnerable)</SelectItem>
-                                                <SelectItem value="PARTIAL">Partial Fix</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
-                            </div>
+                        <div className="space-y-2">
+                            <Label>Notes (Markdown)</Label>
+                            <MDXEditorComponent
+                                value={notes}
+                                onChange={setNotes}
+                                placeholder={requestType === 'RETEST' ? "Describe validation steps..." : "Describe request..."}
+                            />
+                        </div>
 
-                            <div className="space-y-2">
-                                <Label>Notes (Markdown)</Label>
-                                <MDXEditorComponent
-                                    value={notes}
-                                    onChange={setNotes}
-                                    placeholder={requestType === 'RETEST' ? "Describe validation steps..." : "Describe request..."}
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" onClick={handleCancel}>
-                                    <X className="h-4 w-4 mr-2" />
-                                    Cancel
-                                </Button>
-                                <Button size="sm" onClick={handleSubmit} disabled={submitting || !notes}>
-                                    <Save className="h-4 w-4 mr-2" />
-                                    {submitting ? 'Saving...' : (editingRetestId ? 'Update Entry' : 'Save & Add Another')}
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+                        <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={handleCancel}>
+                                <X className="h-4 w-4 mr-2" />
+                                Cancel
+                            </Button>
+                            <Button size="sm" onClick={handleSubmit} disabled={submitting || !notes}>
+                                <Save className="h-4 w-4 mr-2" />
+                                {submitting ? 'Saving...' : (editingRetestId ? 'Update' : 'Save Entry')}
+                            </Button>
+                        </div>
+                    </div>
                 )}
 
+                {/* Timeline Thread */}
                 {retests.length === 0 ? (
-                    <div className="text-center py-6 text-muted-foreground">
-                        <RefreshCw className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <div className="text-center py-8 text-muted-foreground">
+                        <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
                         <p>No retest history available.</p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
-                        {retests.map((retest) => (
-                            <div key={retest.id} className="flex flex-col space-y-2 border rounded-lg p-4 bg-card/50">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-semibold text-sm">{getTypeLabel(retest.request_type)}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                            {format(new Date(retest.created_at), 'MMM d, yyyy HH:mm')}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {retest.request_type === 'RETEST' && getStatusBadge(retest.status)}
-                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEdit(retest)}>
-                                            <Pencil className="h-3 w-3" />
-                                        </Button>
-                                    </div>
+                    <div className="relative space-y-4">
+                        {/* Purple Timeline line */}
+                        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-purple-500/30" />
+
+                        {retests.map((retest, index) => (
+                            <div key={retest.id} className="relative flex gap-4">
+                                {/* Timeline dot - color based on status */}
+                                <div className={`relative z-10 flex-shrink-0 w-8 h-8 rounded-full ${getTimelineColor(retest)} flex items-center justify-center ring-4 ring-background`}>
+                                    {getTimelineIcon(retest)}
                                 </div>
 
-                                <div className="text-sm">
-                                    <span className="text-muted-foreground">By: </span>
-                                    {retest.request_type === 'REQUEST' ? retest.requested_by_name : retest.performed_by_name || 'Unknown'}
-                                </div>
-
-                                {retest.notes_md && (
-                                    <div className="text-sm mt-2 p-3 bg-muted/30 rounded border prose prose-sm dark:prose-invert max-w-none">
-                                        <ReactMarkdown>{retest.notes_md}</ReactMarkdown>
+                                {/* Content */}
+                                <div className="flex-1 pb-4">
+                                    <div className="flex items-start justify-between mb-2">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="font-semibold text-sm">{getTypeLabel(retest.request_type)}</span>
+                                                {retest.request_type === 'RETEST' && getStatusBadge(retest.status)}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                                <span className="font-medium">
+                                                    {retest.request_type === 'REQUEST' ? retest.requested_by_name : retest.performed_by_name || 'Unknown'}
+                                                </span>
+                                                {' · '}
+                                                {formatDistanceToNow(new Date(retest.created_at), { addSuffix: true })}
+                                            </div>
+                                        </div>
+                                        {canEdit && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-7 w-7"
+                                                onClick={() => handleEdit(retest)}
+                                            >
+                                                <Pencil className="h-3 w-3" />
+                                            </Button>
+                                        )}
                                     </div>
-                                )}
+
+                                    {retest.notes_md && (
+                                        <div className="prose prose-sm dark:prose-invert max-w-none mt-2 p-4 bg-muted/30 rounded-lg border">
+                                            <ReactMarkdown
+                                                components={{
+                                                    img: ({ node, ...props }) => <img {...props} src={props.src || undefined} alt={props.alt || ''} />
+                                                }}
+                                            >
+                                                {retest.notes_md}
+                                            </ReactMarkdown>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>

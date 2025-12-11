@@ -6,9 +6,13 @@ import api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Pencil, ExternalLink } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Pencil, ExternalLink, FileText, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { RetestCard } from '@/components/vulnerabilities/retest-card';
+import { VulnerabilityComments } from '@/components/vulnerabilities/vulnerability-comments';
+import { RetestRequestButton } from '@/components/vulnerabilities/retest-request-button';
+import { useAuth } from '@/hooks/use-auth';
 
 interface Vulnerability {
     id: string;
@@ -23,9 +27,14 @@ interface Vulnerability {
     updated_at: string;
 }
 
+interface Comment {
+    id: string;
+}
+
 export default function VulnerabilityViewPage() {
     const params = useParams();
     const router = useRouter();
+    const { canEdit, isClient } = useAuth();
     const projectId = params.projectId as string;
     const vulnId = params.vulnId as string;
 
@@ -33,6 +42,7 @@ export default function VulnerabilityViewPage() {
     const [companyId, setCompanyId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [commentsCount, setCommentsCount] = useState(0);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -46,6 +56,12 @@ export default function VulnerabilityViewPage() {
                     `/companies/${projectRes.data.company}/projects/${projectId}/vulnerabilities/${vulnId}/`
                 );
                 setVulnerability(vulnRes.data);
+
+                // Fetch comments count
+                const commentsRes = await api.get('/comments/', {
+                    params: { vulnerability: vulnId }
+                });
+                setCommentsCount((commentsRes.data.results || commentsRes.data || []).length);
             } catch (err) {
                 console.error('Failed to load vulnerability', err);
                 setError('Failed to load vulnerability');
@@ -115,10 +131,18 @@ export default function VulnerabilityViewPage() {
                         <h1 className="text-3xl font-bold tracking-tight">{vulnerability.title}</h1>
                     </div>
                 </div>
-                <Button onClick={() => router.push(`/project/${projectId}/vulnerabilities/${vulnId}/edit`)}>
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Edit
-                </Button>
+                {canEdit ? (
+                    <Button onClick={() => router.push(`/project/${projectId}/vulnerabilities/${vulnId}/edit`)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                    </Button>
+                ) : isClient && companyId ? (
+                    <RetestRequestButton
+                        companyId={companyId}
+                        projectId={projectId}
+                        vulnerabilityId={vulnId}
+                    />
+                ) : null}
             </div>
 
             {/* Overview Card */}
@@ -152,53 +176,86 @@ export default function VulnerabilityViewPage() {
                 </CardContent>
             </Card>
 
-            {/* Details */}
-            {vulnerability.details_md && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Details</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="prose dark:prose-invert max-w-none">
-                            <ReactMarkdown>{vulnerability.details_md}</ReactMarkdown>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+            {/* Tabs for Details and Comments */}
+            <Tabs defaultValue="details" className="space-y-4">
+                <TabsList>
+                    <TabsTrigger value="details" className="gap-2">
+                        <FileText className="h-4 w-4" />
+                        Details
+                    </TabsTrigger>
+                    <TabsTrigger value="comments" className="gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        Comments
+                        {commentsCount > 0 && (
+                            <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                                {commentsCount}
+                            </Badge>
+                        )}
+                    </TabsTrigger>
+                </TabsList>
 
-            {/* References */}
-            {vulnerability.references && vulnerability.references.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>References</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="space-y-2">
-                            {vulnerability.references.map((ref, index) => (
-                                <li key={index} className="flex items-center gap-2">
-                                    <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                    <a
-                                        href={ref.startsWith('http') ? ref : `https://${ref}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
-                                    >
-                                        {ref}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </CardContent>
-                </Card>
-            )}
+                <TabsContent value="details" className="space-y-6">
+                    {/* Details */}
+                    {vulnerability.details_md && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Details</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="prose dark:prose-invert max-w-none">
+                                    <ReactMarkdown>{vulnerability.details_md}</ReactMarkdown>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
-            {companyId && projectId && vulnId && (
-                <RetestCard
-                    companyId={companyId}
-                    projectId={projectId}
-                    vulnerabilityId={vulnId}
-                />
-            )}
+                    {/* References */}
+                    {vulnerability.references && vulnerability.references.length > 0 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>References</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <ul className="space-y-2">
+                                    {vulnerability.references.map((ref, index) => (
+                                        <li key={index} className="flex items-center gap-2">
+                                            <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                            <a
+                                                href={ref.startsWith('http') ? ref : `https://${ref}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
+                                            >
+                                                {ref}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Retest History */}
+                    {companyId && projectId && vulnId && (
+                        <RetestCard
+                            companyId={companyId}
+                            projectId={projectId}
+                            vulnerabilityId={vulnId}
+                        />
+                    )}
+                </TabsContent>
+
+                <TabsContent value="comments">
+                    {companyId && projectId && vulnId && (
+                        <VulnerabilityComments
+                            companyId={companyId}
+                            projectId={projectId}
+                            vulnerabilityId={vulnId}
+                        />
+                    )}
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
+

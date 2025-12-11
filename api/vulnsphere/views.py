@@ -236,8 +236,66 @@ class RetestViewSet(viewsets.ModelViewSet):
             context['vulnerability'] = get_object_or_404(Vulnerability, pk=self.kwargs['vulnerability_pk'])
         return context
     
+    def perform_create(self, serializer):
+        retest = serializer.save()
+        
+        # Update vulnerability status based on retest result
+        if retest.request_type == 'RETEST' and retest.status:
+            vulnerability = retest.vulnerability
+            
+            if retest.status == 'PASSED':
+                vulnerability.status = 'RESOLVED'
+            elif retest.status == 'FAILED':
+                vulnerability.status = 'RETEST_FAILED'
+            vulnerability.save(update_fields=['status'])
+            
+            # Log the status change
+            from .models import ActivityLog
+            ActivityLog.objects.create(
+                company=vulnerability.project.company,
+                user=self.request.user,
+                entity_type='VULNERABILITY',
+                entity_id=vulnerability.pk,
+                action='STATUS_CHANGED',
+                metadata={
+                    'title': vulnerability.title,
+                    'new_status': vulnerability.status,
+                    'retest_id': str(retest.pk),
+                    'retest_status': retest.status
+                }
+            )
+    
+    def perform_update(self, serializer):
+        retest = serializer.save()
+        
+        # Update vulnerability status if retest result changed
+        if retest.request_type == 'RETEST' and retest.status:
+            vulnerability = retest.vulnerability
+            
+            if retest.status == 'PASSED':
+                vulnerability.status = 'RESOLVED'
+            elif retest.status == 'FAILED':
+                vulnerability.status = 'RETEST_FAILED'
+            vulnerability.save(update_fields=['status'])
+            
+            # Log the status change
+            from .models import ActivityLog
+            ActivityLog.objects.create(
+                company=vulnerability.project.company,
+                user=self.request.user,
+                entity_type='VULNERABILITY',
+                entity_id=vulnerability.pk,
+                action='STATUS_CHANGED',
+                metadata={
+                    'title': vulnerability.title,
+                    'new_status': vulnerability.status,
+                    'retest_id': str(retest.pk),
+                    'retest_status': retest.status
+                }
+            )
+    
     @decorators.action(detail=False, methods=['post'], url_path='request')
-    def request_retest(self, request, vulnerability_pk=None):
+    def request_retest(self, request, company_pk=None, project_pk=None, vulnerability_pk=None):
         """Allow clients to request retests"""
         vulnerability = get_object_or_404(Vulnerability, pk=vulnerability_pk)
         
@@ -258,6 +316,28 @@ class RetestViewSet(viewsets.ModelViewSet):
             notes_md=notes
         )
         
+        # Update vulnerability status to RETEST_PENDING
+        vulnerability.status = 'RETEST_PENDING'
+        vulnerability.save(update_fields=['status'])
+        
+        # Activity log is created automatically via signal
+        # But let's create a specific one for the status change
+        from .models import ActivityLog
+        ActivityLog.objects.create(
+            company=vulnerability.project.company,
+            user=request.user,
+            entity_type='VULNERABILITY',
+            entity_id=vulnerability.pk,
+            action='STATUS_CHANGED',
+            metadata={
+                'title': vulnerability.title,
+                'old_status': 'various',
+                'new_status': 'RETEST_PENDING',
+                'retest_id': str(retest.pk),
+                'notes': notes[:200] if notes else None
+            }
+        )
+        
         serializer = self.get_serializer(retest)
         return response.Response(serializer.data, status=status.HTTP_201_CREATED)
     
@@ -276,9 +356,32 @@ class CommentViewSet(viewsets.ModelViewSet):
         
         # Clients and Testers only see comments from their assigned companies
         return Comment.objects.filter(company__in=user.companies.all())
-
+    
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        # Extract IDs from request data
+        company_id = self.request.data.get('company')
+        project_id = self.request.data.get('project')
+        vulnerability_id = self.request.data.get('vulnerability')
+        retest_id = self.request.data.get('retest')
+        
+        # Get actual objects
+        context_additions = {}
+        if company_id:
+            from django.shortcuts import get_object_or_404
+            context_additions['company'] = get_object_or_404(Company, pk=company_id)
+        if project_id:
+            from django.shortcuts import get_object_or_404
+            context_additions['project'] = get_object_or_404(Project, pk=project_id)
+        if vulnerability_id:
+            from django.shortcuts import get_object_or_404
+            context_additions['vulnerability'] = get_object_or_404(Vulnerability, pk=vulnerability_id)
+        if retest_id:
+            from django.shortcuts import get_object_or_404
+            context_additions['retest'] = get_object_or_404(Retest, pk=retest_id)
+        
+        # Save with context
+        serializer.save(**context_additions)
+
 
 class AttachmentViewSet(viewsets.ModelViewSet):
     queryset = Attachment.objects.all()
