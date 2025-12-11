@@ -136,7 +136,7 @@ class VulnerabilityViewSet(viewsets.ModelViewSet):
         
         # Log activity
         ActivityLog.objects.create(
-            company=vuln.report.company, # vuln.project.company via property
+            company=vuln.project.company,
             user=request.user,
             entity_type='VULNERABILITY',
             entity_id=vuln.pk,
