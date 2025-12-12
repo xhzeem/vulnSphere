@@ -21,7 +21,6 @@ import { formatStatus } from '@/lib/formatters';
 interface Company {
     id: string;
     name: string;
-    slug: string;
 }
 
 interface Project {

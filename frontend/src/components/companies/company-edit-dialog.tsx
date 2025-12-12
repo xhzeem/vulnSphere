@@ -20,11 +20,12 @@ import api from '@/lib/api';
 interface Company {
     id: string;
     name: string;
-    slug: string;
     contact_email: string;
     address: string;
     notes: string;
     is_active: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 interface CompanyEditDialogProps {
@@ -39,7 +40,6 @@ export function CompanyEditDialog({ company, open, onOpenChange, onSuccess }: Co
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
-        slug: '',
         contact_email: '',
         address: '',
         notes: '',
@@ -50,7 +50,6 @@ export function CompanyEditDialog({ company, open, onOpenChange, onSuccess }: Co
         if (company) {
             setFormData({
                 name: company.name,
-                slug: company.slug,
                 contact_email: company.contact_email,
                 address: company.address || '',
                 notes: company.notes || '',
@@ -80,12 +79,10 @@ export function CompanyEditDialog({ company, open, onOpenChange, onSuccess }: Co
         }
     };
 
-    // Auto-generate slug from name
     const handleNameChange = (name: string) => {
         setFormData({
             ...formData,
             name,
-            slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
         });
     };
 
@@ -110,16 +107,6 @@ export function CompanyEditDialog({ company, open, onOpenChange, onSuccess }: Co
                                 required
                                 value={formData.name}
                                 onChange={(e) => handleNameChange(e.target.value)}
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="edit-slug">Slug *</Label>
-                            <Input
-                                id="edit-slug"
-                                required
-                                value={formData.slug}
-                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                                placeholder="company-slug"
                             />
                         </div>
                         <div className="grid gap-2">

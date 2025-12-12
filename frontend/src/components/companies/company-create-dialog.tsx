@@ -28,20 +28,14 @@ export function CompanyCreateDialog({ open, onOpenChange, onSuccess }: CompanyCr
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
-        slug: '',
         contact_email: '',
         address: '',
         notes: '',
         is_active: true,
     });
 
-    // Auto-generate slug from name
     const handleNameChange = (name: string) => {
-        const slug = name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-        setFormData({ ...formData, name, slug });
+        setFormData({ ...formData, name });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -55,7 +49,6 @@ export function CompanyCreateDialog({ open, onOpenChange, onSuccess }: CompanyCr
             onOpenChange(false);
             setFormData({
                 name: '',
-                slug: '',
                 contact_email: '',
                 address: '',
                 notes: '',
@@ -63,7 +56,6 @@ export function CompanyCreateDialog({ open, onOpenChange, onSuccess }: CompanyCr
             });
         } catch (err: any) {
             const errorMessage = err.response?.data?.detail ||
-                err.response?.data?.slug?.[0] ||
                 err.response?.data?.name?.[0] ||
                 'Failed to create company';
             setError(errorMessage);
@@ -97,19 +89,6 @@ export function CompanyCreateDialog({ open, onOpenChange, onSuccess }: CompanyCr
                                 onChange={(e) => handleNameChange(e.target.value)}
                                 placeholder="e.g., Acme Corporation"
                             />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="slug">Slug *</Label>
-                            <Input
-                                id="slug"
-                                required
-                                value={formData.slug}
-                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                                placeholder="e.g., acme-corporation"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Auto-generated from name. Used in URLs.
-                            </p>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="contact_email">Contact Email *</Label>

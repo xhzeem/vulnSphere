@@ -21,13 +21,14 @@ const ITEMS_PER_PAGE = 10;
 interface Company {
     id: string;
     name: string;
-    slug: string;
     contact_email: string;
     address: string;
     notes: string;
     is_active: boolean;
     project_count?: number;
     asset_count?: number;
+    created_at: string;
+    updated_at: string;
 }
 
 export default function CompaniesPage() {
@@ -77,8 +78,7 @@ export default function CompaniesPage() {
             const query = searchQuery.toLowerCase();
             result = result.filter(company =>
                 company.name.toLowerCase().includes(query) ||
-                company.contact_email.toLowerCase().includes(query) ||
-                company.slug.toLowerCase().includes(query)
+                company.contact_email.toLowerCase().includes(query)
             );
         }
 

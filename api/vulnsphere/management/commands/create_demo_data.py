@@ -7,6 +7,7 @@ from vulnsphere.models import (
 from datetime import timedelta, date
 import random
 import uuid
+import re
 from django.core.files.base import ContentFile
 
 class Command(BaseCommand):
@@ -69,35 +70,30 @@ class Command(BaseCommand):
         companies_data = [
             {
                 'name': 'Acme Financial Services',
-                'slug': 'acme-financial',
                 'contact_email': 'security@acmefinancial.com',
                 'address': '100 Wall Street, New York, NY 10005',
                 'notes': 'Leading investment banking firm with extensive web presence'
             },
             {
                 'name': 'TechCorp Solutions',
-                'slug': 'techcorp-solutions',
                 'contact_email': 'it.security@techcorp.com',
                 'address': '1 Technology Way, San Francisco, CA 94105',
                 'notes': 'Enterprise software development company'
             },
             {
                 'name': 'Global Healthcare Inc',
-                'slug': 'global-healthcare',
                 'contact_email': 'privacy@globalhealth.com',
                 'address': '500 Medical Center Blvd, Boston, MA 02115',
                 'notes': 'Healthcare management system provider'
             },
             {
                 'name': 'RetailMax Chain',
-                'slug': 'retailmax-chain',
                 'contact_email': 'devops@retailmax.com',
                 'address': '2500 Commerce Drive, Chicago, IL 60606',
                 'notes': 'National retail chain with e-commerce platform'
             },
             {
                 'name': 'SecureNet Systems',
-                'slug': 'securenet-systems',
                 'contact_email': 'admin@securenet.com',
                 'address': '789 Cyber Lane, Austin, TX 78701',
                 'notes': 'Cybersecurity consulting firm'
@@ -107,7 +103,7 @@ class Command(BaseCommand):
         companies = []
         for company_data in companies_data:
             company, created = Company.objects.get_or_create(
-                slug=company_data['slug'],
+                name=company_data['name'],
                 defaults=company_data
             )
             companies.append(company)
@@ -242,7 +238,7 @@ class Command(BaseCommand):
 
         for company in companies:
             # Create assets for this company
-            domain = company.slug.replace('-', '')
+            domain = re.sub(r'[^a-z0-9]+', '', company.name.lower())
             company_assets = []
             
             for asset_data in asset_types:

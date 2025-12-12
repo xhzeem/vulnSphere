@@ -31,12 +31,12 @@ const ITEMS_PER_PAGE = 10;
 interface Company {
     id: string;
     name: string;
-    slug: string;
     contact_email: string;
     address: string;
     notes: string;
     is_active: boolean;
     created_at: string;
+    updated_at: string;
 }
 
 interface Project {

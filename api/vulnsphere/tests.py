@@ -29,8 +29,8 @@ class ReportingAPITests(APITestCase):
         )
 
         # Companies - all users can access all companies (global roles)
-        self.company = Company.objects.create(name='Company A', slug='company-a', contact_email='a@test.com')
-        self.company_other = Company.objects.create(name='Company B', slug='company-b', contact_email='b@test.com')
+        self.company = Company.objects.create(name='Company A', contact_email='a@test.com')
+        self.company_other = Company.objects.create(name='Company B', contact_email='b@test.com')
 
         # Data
         self.asset = Asset.objects.create(company=self.company, name='WebApp', type='WEB_APP', identifier='https://example.com')
