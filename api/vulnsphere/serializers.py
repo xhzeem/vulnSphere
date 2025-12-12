@@ -59,6 +59,9 @@ class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = ['id', 'name', 'slug', 'contact_email', 'address', 'notes', 'is_active', 'created_at', 'updated_at', 'project_count', 'asset_count']
+        extra_kwargs = {
+            'contact_email': {'required': False, 'allow_null': True, 'allow_blank': True}
+        }
     
     def get_project_count(self, obj):
         return obj.projects.count()
