@@ -20,11 +20,16 @@ import { Plus, FileText, Server, Pencil, Trash2, Eye, Save, X, Upload } from 'lu
 import { CSVImportDialog } from '@/components/ui/csv-import-dialog';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, EnhancedSelect } from '@/components/ui/select';
+import { Search } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { useAuth } from '@/hooks/use-auth';
 import { formatStatus, formatAssetType } from '@/lib/formatters';
+import { useAuth } from '@/hooks/use-auth';
+import { ProjectStatusBadge } from '@/components/projects/project-status-badge';
+import { AssetStatusBadge } from '@/components/assets/asset-status-badge';
+import { CompanyStatusBadge } from '@/components/companies/company-status-badge';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -73,6 +78,13 @@ export default function CompanyDetailPage() {
     const [assets, setAssets] = useState<Asset[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    // Filter states
+    const [projectSearchQuery, setProjectSearchQuery] = useState('');
+    const [projectStatusFilter, setProjectStatusFilter] = useState('all');
+    const [assetSearchQuery, setAssetSearchQuery] = useState('');
+    const [assetStatusFilter, setAssetStatusFilter] = useState('all');
+    const [assetTypeFilter, setAssetTypeFilter] = useState('all');
 
     const [projectDialogOpen, setProjectDialogOpen] = useState(false);
     const [projectEditDialogOpen, setProjectEditDialogOpen] = useState(false);
@@ -229,12 +241,58 @@ export default function CompanyDetailPage() {
         );
     }
 
+    // Filtering logic
+    const getFilteredProjects = () => {
+        let filtered = projects;
+
+        if (projectSearchQuery) {
+            const query = projectSearchQuery.toLowerCase();
+            filtered = filtered.filter(project =>
+                project.title.toLowerCase().includes(query) ||
+                project.engagement_type.toLowerCase().includes(query)
+            );
+        }
+
+        if (projectStatusFilter !== 'all') {
+            filtered = filtered.filter(project => project.status === projectStatusFilter);
+        }
+
+        return filtered;
+    };
+
+    const getFilteredAssets = () => {
+        let filtered = assets;
+
+        if (assetSearchQuery) {
+            const query = assetSearchQuery.toLowerCase();
+            filtered = filtered.filter(asset =>
+                asset.name.toLowerCase().includes(query) ||
+                asset.identifier.toLowerCase().includes(query) ||
+                asset.description.toLowerCase().includes(query)
+            );
+        }
+
+        if (assetStatusFilter !== 'all') {
+            const isActive = assetStatusFilter === 'active';
+            filtered = filtered.filter(asset => asset.is_active === isActive);
+        }
+
+        if (assetTypeFilter !== 'all') {
+            filtered = filtered.filter(asset => asset.type === assetTypeFilter);
+        }
+
+        return filtered;
+    };
+
     // Pagination logic
+    const filteredProjects = getFilteredProjects();
+    const filteredAssets = getFilteredAssets();
+    
     const projectStartIndex = (projectPage - 1) * ITEMS_PER_PAGE;
-    const paginatedProjects = projects.slice(projectStartIndex, projectStartIndex + ITEMS_PER_PAGE);
+    const paginatedProjects = filteredProjects.slice(projectStartIndex, projectStartIndex + ITEMS_PER_PAGE);
 
     const assetStartIndex = (assetPage - 1) * ITEMS_PER_PAGE;
-    const paginatedAssets = assets.slice(assetStartIndex, assetStartIndex + ITEMS_PER_PAGE);
+    const paginatedAssets = filteredAssets.slice(assetStartIndex, assetStartIndex + ITEMS_PER_PAGE);
 
     if (error || !company) {
         return (
@@ -253,9 +311,7 @@ export default function CompanyDetailPage() {
                     <h1 className="text-3xl font-bold tracking-tight">{company.name}</h1>
                     <div className="flex items-center gap-2 mt-1">
                         <p className="text-muted-foreground">{company.contact_email}</p>
-                        <Badge variant={company.is_active ? 'outline' : 'secondary'}>
-                            {company.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
+                        <CompanyStatusBadge status={company.is_active} />
                     </div>
                 </div>
                 {!isEditing && canEdit && (
@@ -371,22 +427,65 @@ export default function CompanyDetailPage() {
                 </TabsList>
 
                 <TabsContent value="projects" className="space-y-4">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <h2 className="text-xl font-semibold">Projects</h2>
                         {canEdit && (
                             <Button onClick={() => setProjectDialogOpen(true)}>
                                 <Plus className="mr-2 h-4 w-4" />
-                                New Project
+                                Add Project
                             </Button>
                         )}
                     </div>
+                    
+                    {/* Project Filters */}
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search projects..."
+                                value={projectSearchQuery}
+                                onChange={(e) => {
+                                    setProjectSearchQuery(e.target.value);
+                                    setProjectPage(1); // Reset to first page on search
+                                }}
+                                className="pl-8"
+                            />
+                        </div>
+                        <EnhancedSelect value={projectStatusFilter} onValueChange={(value: string) => {
+                            setProjectStatusFilter(value);
+                            setProjectPage(1); // Reset to first page on filter
+                        }} colorType="projectStatus">
+                            <SelectTrigger className="w-full md:w-[180px]">
+                                <SelectValue placeholder="All Statuses" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Statuses</SelectItem>
+                                <SelectItem value="DRAFT" color="#6b7280">Draft</SelectItem>
+                                <SelectItem value="IN_REVIEW" color="#3b82f6">In Review</SelectItem>
+                                <SelectItem value="FINAL" color="#22c55e">Final</SelectItem>
+                                <SelectItem value="ARCHIVED" color="#f97316">Archived</SelectItem>
+                            </SelectContent>
+                        </EnhancedSelect>
+                    </div>
 
-                    {projects.length === 0 ? (
+                    {filteredProjects.length === 0 ? (
                         <Card>
                             <CardContent className="flex flex-col items-center justify-center py-12">
                                 <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                                <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
-                                <p className="text-muted-foreground mb-4">Create your first project to get started</p>
+                                <h3 className="text-lg font-semibold mb-2">
+                                    {projectSearchQuery || projectStatusFilter !== 'all' ? 'No projects match your filters' : 'No projects yet'}
+                                </h3>
+                                <p className="text-muted-foreground mb-4">
+                                    {projectSearchQuery || projectStatusFilter !== 'all' 
+                                        ? 'Try adjusting your search or filters' 
+                                        : 'Create your first project to get started'}
+                                </p>
+                                {!projectSearchQuery && projectStatusFilter === 'all' && canEdit && (
+                                    <Button onClick={() => setProjectDialogOpen(true)}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Create Project
+                                    </Button>
+                                )}
                             </CardContent>
                         </Card>
                     ) : (
@@ -412,9 +511,7 @@ export default function CompanyDetailPage() {
                                                 <TableCell className="font-medium">{project.title}</TableCell>
                                                 <TableCell>{project.engagement_type}</TableCell>
                                                 <TableCell>
-                                                    <Badge variant={getStatusColor(project.status)}>
-                                                        {formatStatus(project.status)}
-                                                    </Badge>
+                                                    <ProjectStatusBadge status={project.status} />
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
@@ -442,7 +539,7 @@ export default function CompanyDetailPage() {
                                 </Table>
                             <TablePagination
                                 currentPage={projectPage}
-                                totalItems={projects.length}
+                                totalItems={filteredProjects.length}
                                 itemsPerPage={ITEMS_PER_PAGE}
                                 onPageChange={setProjectPage}
                             />
@@ -451,7 +548,7 @@ export default function CompanyDetailPage() {
                 </TabsContent>
 
                 <TabsContent value="assets" className="space-y-4">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <h2 className="text-xl font-semibold">Assets</h2>
                         {canEdit && (
                             <div className="flex gap-2">
@@ -466,13 +563,73 @@ export default function CompanyDetailPage() {
                             </div>
                         )}
                     </div>
+                    
+                    {/* Asset Filters */}
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search assets..."
+                                value={assetSearchQuery}
+                                onChange={(e) => {
+                                    setAssetSearchQuery(e.target.value);
+                                    setAssetPage(1); // Reset to first page on search
+                                }}
+                                className="pl-8"
+                            />
+                        </div>
+                        <EnhancedSelect value={assetStatusFilter} onValueChange={(value: string) => {
+                            setAssetStatusFilter(value);
+                            setAssetPage(1); // Reset to first page on filter
+                        }} colorType="assetStatus">
+                            <SelectTrigger className="w-full md:w-[180px]">
+                                <SelectValue placeholder="All Statuses" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Statuses</SelectItem>
+                                <SelectItem value="active" color="#22c55e">Active</SelectItem>
+                                <SelectItem value="inactive" color="#ef4444">Inactive</SelectItem>
+                            </SelectContent>
+                        </EnhancedSelect>
+                        <Select value={assetTypeFilter} onValueChange={(value: string) => {
+                            setAssetTypeFilter(value);
+                            setAssetPage(1); // Reset to first page on filter
+                        }}>
+                            <SelectTrigger className="w-full md:w-[180px]">
+                                <SelectValue placeholder="All Types" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Types</SelectItem>
+                                <SelectItem value="WEB_APP">Web Application</SelectItem>
+                                <SelectItem value="API">API</SelectItem>
+                                <SelectItem value="SERVER">Server</SelectItem>
+                                <SelectItem value="MOBILE_APP">Mobile Application</SelectItem>
+                                <SelectItem value="NETWORK_DEVICE">Network Device</SelectItem>
+                                <SelectItem value="OTHER">Other</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
 
-                    {assets.length === 0 ? (
+                    {filteredAssets.length === 0 ? (
                         <Card>
                             <CardContent className="flex flex-col items-center justify-center py-12">
                                 <Server className="h-12 w-12 text-muted-foreground mb-4" />
-                                <h3 className="text-lg font-semibold mb-2">No assets yet</h3>
-                                <p className="text-muted-foreground mb-4">Add an asset to track in this company</p>
+                                <h3 className="text-lg font-semibold mb-2">
+                                    {assetSearchQuery || assetStatusFilter !== 'all' || assetTypeFilter !== 'all' 
+                                        ? 'No assets match your filters' 
+                                        : 'No assets yet'}
+                                </h3>
+                                <p className="text-muted-foreground mb-4">
+                                    {assetSearchQuery || assetStatusFilter !== 'all' || assetTypeFilter !== 'all'
+                                        ? 'Try adjusting your search or filters'
+                                        : 'Add an asset to track in this company'}
+                                </p>
+                                {!assetSearchQuery && assetStatusFilter === 'all' && assetTypeFilter === 'all' && canEdit && (
+                                    <Button onClick={() => setAssetDialogOpen(true)}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add Asset
+                                    </Button>
+                                )}
                             </CardContent>
                         </Card>
                     ) : (
@@ -496,15 +653,7 @@ export default function CompanyDetailPage() {
                                                 </TableCell>
                                                 <TableCell>{asset.identifier}</TableCell>
                                                 <TableCell>
-                                                    {asset.is_active ? (
-                                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                                            Active
-                                                        </Badge>
-                                                    ) : (
-                                                        <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
-                                                            Inactive
-                                                        </Badge>
-                                                    )}
+                                                    <AssetStatusBadge status={asset.is_active} />
                                                 </TableCell>
                                                 {canEdit && (
                                                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -524,7 +673,7 @@ export default function CompanyDetailPage() {
                                 </Table>
                             <TablePagination
                                 currentPage={assetPage}
-                                totalItems={assets.length}
+                                totalItems={filteredAssets.length}
                                 itemsPerPage={ITEMS_PER_PAGE}
                                 onPageChange={setAssetPage}
                             />

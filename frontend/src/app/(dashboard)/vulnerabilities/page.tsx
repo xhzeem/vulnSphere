@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, EnhancedSelect } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 
-import { Search, Eye } from 'lucide-react';
+import { Search, Plus, AlertCircle, Clock, CheckCircle, AlertTriangle, XCircle, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
@@ -38,23 +39,24 @@ interface Vulnerability {
 export default function VulnerabilitiesPage() {
     const router = useRouter();
     const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([]);
-    const [companies, setCompanies] = useState<Company[]>([]);
-    const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
-    const [selectedCompany, setSelectedCompany] = useState<string>('all');
-    const [selectedSeverity, setSelectedSeverity] = useState<string>('all');
-    const [selectedStatus, setSelectedStatus] = useState<string>('all');
-    const [page, setPage] = useState(1);
-    const [totalCount, setTotalCount] = useState(0);
+    const [selectedSeverity, setSelectedSeverity] = useState('all');
+    const [selectedStatus, setSelectedStatus] = useState('all');
+    const [selectedCompany, setSelectedCompany] = useState('all');
+    const [companies, setCompanies] = useState<Company[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
 
     useEffect(() => {
         fetchData();
-    }, [page, search]);
+    }, [currentPage, search]);
 
     useEffect(() => {
-        filterVulnerabilities();
-    }, [selectedCompany, selectedSeverity, selectedStatus]);
+        setCurrentPage(1);
+    }, [search, selectedCompany, selectedSeverity, selectedStatus]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -111,7 +113,7 @@ export default function VulnerabilitiesPage() {
             }
 
             setVulnerabilities(allVulns);
-            setTotalCount(allVulns.length);
+            setTotalItems(allVulns.length);
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
@@ -146,8 +148,12 @@ export default function VulnerabilitiesPage() {
             filtered = filtered.filter(v => v.status === selectedStatus);
         }
 
-        // Pagination
-        const startIndex = (page - 1) * 12;
+        return filtered;
+    };
+
+    const getPaginatedVulnerabilities = () => {
+        const filtered = getFilteredVulnerabilities();
+        const startIndex = (currentPage - 1) * 12;
         return filtered.slice(startIndex, startIndex + 12);
     };
 
@@ -164,7 +170,8 @@ export default function VulnerabilitiesPage() {
 
 
 
-    const filteredVulns = getFilteredVulnerabilities();
+    const filteredVulns = getPaginatedVulnerabilities();
+    const totalFilteredVulns = getFilteredVulnerabilities().length;
 
     return (
         <div className="space-y-6">
@@ -177,58 +184,58 @@ export default function VulnerabilitiesPage() {
                 </div>
             </div>
 
-            <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search vulnerabilities..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="pl-8"
-                        />
-                    </div>
-                    <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="All Companies" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Companies</SelectItem>
-                            {companies.map((company) => (
-                                <SelectItem key={company.id} value={company.id.toString()}>
-                                    {company.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <Select value={selectedSeverity} onValueChange={setSelectedSeverity}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="All Severities" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Severities</SelectItem>
-                            <SelectItem value="CRITICAL"><SeverityBadge severity="CRITICAL" grow /></SelectItem>
-                            <SelectItem value="HIGH"><SeverityBadge severity="HIGH" grow /></SelectItem>
-                            <SelectItem value="MEDIUM"><SeverityBadge severity="MEDIUM" grow /></SelectItem>
-                            <SelectItem value="LOW"><SeverityBadge severity="LOW" grow /></SelectItem>
-                            <SelectItem value="INFO"><SeverityBadge severity="INFO" grow /></SelectItem>
-                            <SelectItem value="UNCLASSIFIED"><SeverityBadge severity="UNCLASSIFIED" grow /></SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="All Statuses" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Statuses</SelectItem>
-                            <SelectItem value="OPEN"><StatusBadge status="OPEN" grow /></SelectItem>
-                            <SelectItem value="IN_PROGRESS"><StatusBadge status="IN_PROGRESS" grow /></SelectItem>
-                            <SelectItem value="RESOLVED"><StatusBadge status="RESOLVED" grow /></SelectItem>
-                            <SelectItem value="ACCEPTED_RISK"><StatusBadge status="ACCEPTED_RISK" grow /></SelectItem>
-                            <SelectItem value="FALSE_POSITIVE"><StatusBadge status="FALSE_POSITIVE" grow /></SelectItem>
-                        </SelectContent>
-                    </Select>
+            <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search vulnerabilities..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-8"
+                    />
                 </div>
+                <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                    <SelectTrigger className="w-full md:w-[180px]">
+                        <SelectValue placeholder="All Companies" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Companies</SelectItem>
+                        {companies.map((company) => (
+                            <SelectItem key={company.id} value={company.id.toString()}>
+                                {company.name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <EnhancedSelect value={selectedSeverity} onValueChange={setSelectedSeverity} colorType="severity">
+                    <SelectTrigger className="w-full md:w-[180px]">
+                        <SelectValue placeholder="All Severities" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Severities</SelectItem>
+                        <SelectItem value="CRITICAL" color="#ef4444">Critical</SelectItem>
+                        <SelectItem value="HIGH" color="#f97316">High</SelectItem>
+                        <SelectItem value="MEDIUM" color="#eab308">Medium</SelectItem>
+                        <SelectItem value="LOW" color="#3b82f6">Low</SelectItem>
+                        <SelectItem value="INFO" color="#22c55e">Info</SelectItem>
+                        <SelectItem value="UNCLASSIFIED" color="#6b7280">Unclassified</SelectItem>
+                    </SelectContent>
+                </EnhancedSelect>
+                <EnhancedSelect value={selectedStatus} onValueChange={setSelectedStatus} colorType="status">
+                    <SelectTrigger className="w-full md:w-[180px]">
+                        <SelectValue placeholder="All Statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="OPEN" icon={<AlertCircle className="w-3 h-3" style={{ color: '#ef4444' }} />}>Open</SelectItem>
+                        <SelectItem value="IN_PROGRESS" icon={<Clock className="w-3 h-3" style={{ color: '#3b82f6' }} />}>In Progress</SelectItem>
+                        <SelectItem value="RESOLVED" icon={<CheckCircle className="w-3 h-3" style={{ color: '#22c55e' }} />}>Resolved</SelectItem>
+                        <SelectItem value="ACCEPTED_RISK" icon={<AlertTriangle className="w-3 h-3" style={{ color: '#eab308' }} />}>Accepted Risk</SelectItem>
+                        <SelectItem value="FALSE_POSITIVE" icon={<XCircle className="w-3 h-3" style={{ color: '#6b7280' }} />}>False Positive</SelectItem>
+                        <SelectItem value="RETEST_PENDING" icon={<RotateCcw className="w-3 h-3" style={{ color: '#a855f7' }} />}>Retest Pending</SelectItem>
+                        <SelectItem value="RETEST_FAILED" icon={<XCircle className="w-3 h-3" style={{ color: '#ef4444' }} />}>Retest Failed</SelectItem>
+                    </SelectContent>
+                </EnhancedSelect>
             </div>
 
             <Table>
@@ -250,7 +257,7 @@ export default function VulnerabilitiesPage() {
                         </TableRow>
                     ) : filteredVulns.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                            <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                                 No vulnerabilities found
                             </TableCell>
                         </TableRow>
@@ -261,14 +268,18 @@ export default function VulnerabilitiesPage() {
                                 className="cursor-pointer hover:bg-muted/50"
                                 onClick={() => router.push(`/project/${vuln.project}/vulnerabilities/${vuln.id}`)}
                             >
-                                <TableCell className="font-medium">{vuln.title}</TableCell>
+                                <TableCell className="font-medium">
+                                    <Link href={`/vulnerability/${vuln.id}`} className="hover:text-primary">
+                                        {vuln.title}
+                                    </Link>
+                                </TableCell>
                                 <TableCell>{getCompanyName(vuln.project)}</TableCell>
                                 <TableCell>{getProjectTitle(vuln.project)}</TableCell>
                                 <TableCell>
-                                    <SeverityBadge severity={vuln.severity} grow />
+                                    <SeverityBadge severity={vuln.severity} />
                                 </TableCell>
                                 <TableCell>
-                                    <StatusBadge status={vuln.status} grow />
+                                    <StatusBadge status={vuln.status} />
                                 </TableCell>
                             </TableRow>
                         ))
@@ -277,10 +288,10 @@ export default function VulnerabilitiesPage() {
             </Table>
 
             <TablePagination
-                currentPage={page}
-                totalItems={totalCount}
+                currentPage={currentPage}
+                totalItems={totalFilteredVulns}
                 itemsPerPage={12}
-                onPageChange={setPage}
+                onPageChange={setCurrentPage}
             />
         </div>
     );

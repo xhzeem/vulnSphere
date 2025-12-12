@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, EnhancedSelect } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Save, Plus, X, Calculator } from 'lucide-react';
 import { MDXEditorComponent } from '@/components/md-editor';
@@ -202,19 +202,19 @@ export function TemplateForm({ templateId, mode }: TemplateFormProps) {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="severity">Severity *</Label>
-                            <Select value={formData.severity} onValueChange={(value) => setFormData({ ...formData, severity: value })}>
+                            <EnhancedSelect value={formData.severity} onValueChange={(value: string) => setFormData({ ...formData, severity: value })} colorType="severity">
                                 <SelectTrigger className="[&>span:first-child]:w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="CRITICAL" className="[&>span:not(.absolute)]:w-full"><SeverityBadge severity="CRITICAL" grow /></SelectItem>
-                                    <SelectItem value="HIGH" className="[&>span:not(.absolute)]:w-full"><SeverityBadge severity="HIGH" grow /></SelectItem>
-                                    <SelectItem value="MEDIUM" className="[&>span:not(.absolute)]:w-full"><SeverityBadge severity="MEDIUM" grow /></SelectItem>
-                                    <SelectItem value="LOW" className="[&>span:not(.absolute)]:w-full"><SeverityBadge severity="LOW" grow /></SelectItem>
-                                    <SelectItem value="INFO" className="[&>span:not(.absolute)]:w-full"><SeverityBadge severity="INFO" grow /></SelectItem>
-                                    <SelectItem value="UNCLASSIFIED" className="[&>span:not(.absolute)]:w-full"><SeverityBadge severity="UNCLASSIFIED" grow /></SelectItem>
+                                    <SelectItem value="CRITICAL" className="[&>span:not(.absolute)]:w-full" color="#ef4444">Critical</SelectItem>
+                                    <SelectItem value="HIGH" className="[&>span:not(.absolute)]:w-full" color="#f97316">High</SelectItem>
+                                    <SelectItem value="MEDIUM" className="[&>span:not(.absolute)]:w-full" color="#eab308">Medium</SelectItem>
+                                    <SelectItem value="LOW" className="[&>span:not(.absolute)]:w-full" color="#3b82f6">Low</SelectItem>
+                                    <SelectItem value="INFO" className="[&>span:not(.absolute)]:w-full" color="#22c55e">Info</SelectItem>
+                                    <SelectItem value="UNCLASSIFIED" className="[&>span:not(.absolute)]:w-full" color="#6b7280">Unclassified</SelectItem>
                                 </SelectContent>
-                            </Select>
+                            </EnhancedSelect>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="cvss">CVSS Base Score</Label>

@@ -9,8 +9,8 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash2, Plus, Search, Upload } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, EnhancedSelect } from '@/components/ui/select';
+import { Pencil, Trash2, Plus, Search, Upload, AlertCircle, Clock, CheckCircle, AlertTriangle, XCircle, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { format } from 'date-fns';
 import { SeverityBadge } from '@/components/vulnerabilities/severity-badge';
@@ -118,20 +118,20 @@ export function TemplatesTable() {
                         className="pl-8"
                     />
                 </div>
-                <Select value={selectedSeverity} onValueChange={setSelectedSeverity}>
+                <EnhancedSelect value={selectedSeverity} onValueChange={setSelectedSeverity} colorType="severity">
                     <SelectTrigger className="w-full md:w-[200px]">
                         <SelectValue placeholder="All Severities" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Severities</SelectItem>
-                        <SelectItem value="CRITICAL">Critical</SelectItem>
-                        <SelectItem value="HIGH">High</SelectItem>
-                        <SelectItem value="MEDIUM">Medium</SelectItem>
-                        <SelectItem value="LOW">Low</SelectItem>
-                        <SelectItem value="INFO">Info</SelectItem>
-                        <SelectItem value="UNCLASSIFIED">Unclassified</SelectItem>
+                        <SelectItem value="CRITICAL" color="#ef4444">Critical</SelectItem>
+                        <SelectItem value="HIGH" color="#f97316">High</SelectItem>
+                        <SelectItem value="MEDIUM" color="#eab308">Medium</SelectItem>
+                        <SelectItem value="LOW" color="#3b82f6">Low</SelectItem>
+                        <SelectItem value="INFO" color="#22c55e">Info</SelectItem>
+                        <SelectItem value="UNCLASSIFIED" color="#6b7280">Unclassified</SelectItem>
                     </SelectContent>
-                </Select>
+                </EnhancedSelect>
             </div>
 
             <Table>
@@ -165,7 +165,7 @@ export function TemplatesTable() {
                                 >
                                     <TableCell className="font-medium">{template.title}</TableCell>
                                     <TableCell>
-                                        <SeverityBadge severity={template.severity} grow />
+                                        <SeverityBadge severity={template.severity} />
                                     </TableCell>
                                     <TableCell className="text-muted-foreground">
                                         {format(new Date(template.updated_at), 'MMM d, yyyy')}

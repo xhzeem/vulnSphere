@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, EnhancedSelect } from '@/components/ui/select';
 import api from '@/lib/api';
 
 interface Project {
@@ -114,20 +114,21 @@ export function ProjectEditDialog({ project, open, onOpenChange, onSuccess }: Pr
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-status">Status *</Label>
-                            <Select
+                            <EnhancedSelect
                                 value={formData.status}
-                                onValueChange={(value) => setFormData({ ...formData, status: value })}
+                                onValueChange={(value: string) => setFormData({ ...formData, status: value })}
+                                colorType="projectStatus"
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="DRAFT">Draft</SelectItem>
-                                    <SelectItem value="IN_REVIEW">In Review</SelectItem>
-                                    <SelectItem value="FINAL">Final</SelectItem>
-                                    <SelectItem value="ARCHIVED">Archived</SelectItem>
+                                    <SelectItem value="DRAFT" color="#6b7280">Draft</SelectItem>
+                                    <SelectItem value="IN_REVIEW" color="#3b82f6">In Review</SelectItem>
+                                    <SelectItem value="FINAL" color="#22c55e">Final</SelectItem>
+                                    <SelectItem value="ARCHIVED" color="#f97316">Archived</SelectItem>
                                 </SelectContent>
-                            </Select>
+                            </EnhancedSelect>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">

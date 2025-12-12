@@ -34,6 +34,11 @@ export const formatVulnerabilityStatus = (status: string): string => {
 
 export const formatAssetType = (type: string): string => {
     const typeMap: Record<string, string> = {
+        'server': 'Server',
+        'web': 'Web Application',
+        'network': 'Network Device',
+        'database': 'Database',
+        'cloud': 'Cloud Service',
         'WEB_APP': 'Web App',
         'API': 'API',
         'SERVER': 'Server',

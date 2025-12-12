@@ -11,10 +11,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TablePagination } from '@/components/ui/table-pagination';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, EnhancedSelect } from '@/components/ui/select';
+import { ProjectStatusBadge } from '@/components/projects/project-status-badge';
 import { VulnerabilityDeleteDialog } from '@/components/vulnerabilities/vulnerability-delete-dialog';
 import { VulnerabilityCloneDialog } from '@/components/vulnerabilities/vulnerability-clone-dialog';
-import { ArrowLeft, Plus, Pencil, Trash2, Copy, Shield, Search, Eye, Save, X, FileText, Minus } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Copy, Shield, Search, Eye, Save, X, FileText, Minus, AlertCircle, Clock, CheckCircle, AlertTriangle, XCircle, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import { MDXEditorComponent } from '@/components/md-editor';
@@ -333,9 +334,7 @@ export default function ProjectDetailPage() {
                         <h1 className="text-3xl font-bold tracking-tight">{project.title}</h1>
                         <div className="flex items-center gap-2 mt-1">
                             <p className="text-muted-foreground">{project.engagement_type}</p>
-                            <Badge variant={getStatusColor(project.status)}>
-                                {project.status.replace('_', ' ')}
-                            </Badge>
+                            <ProjectStatusBadge status={project.status} />
                         </div>
                     </div>
                 </div>
@@ -431,20 +430,21 @@ export default function ProjectDetailPage() {
                     {isEditing && (
                         <div className="space-y-2">
                             <Label>Status</Label>
-                            <Select
+                            <EnhancedSelect
                                 value={editFormData.status || project.status}
-                                onValueChange={(v) => setEditFormData({ ...editFormData, status: v })}
+                                onValueChange={(v: string) => setEditFormData({ ...editFormData, status: v })}
+                                colorType="projectStatus"
                             >
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="DRAFT">Draft</SelectItem>
-                                    <SelectItem value="IN_REVIEW">In Review</SelectItem>
-                                    <SelectItem value="FINAL">Final</SelectItem>
-                                    <SelectItem value="ARCHIVED">Archived</SelectItem>
+                                    <SelectItem value="DRAFT" color="#6b7280">Draft</SelectItem>
+                                    <SelectItem value="IN_REVIEW" color="#3b82f6">In Review</SelectItem>
+                                    <SelectItem value="FINAL" color="#22c55e">Final</SelectItem>
+                                    <SelectItem value="ARCHIVED" color="#f97316">Archived</SelectItem>
                                 </SelectContent>
-                            </Select>
+                            </EnhancedSelect>
                         </div>
                     )}
                     <div>
@@ -498,33 +498,35 @@ export default function ProjectDetailPage() {
                                     className="pl-8"
                                 />
                             </div>
-                            <Select value={vulnSeverityFilter} onValueChange={setVulnSeverityFilter}>
+                            <EnhancedSelect value={vulnSeverityFilter} onValueChange={setVulnSeverityFilter} colorType="severity">
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Severity" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="ALL">All Severities</SelectItem>
-                                    <SelectItem value="CRITICAL"><SeverityBadge severity="CRITICAL" grow /></SelectItem>
-                                    <SelectItem value="HIGH"><SeverityBadge severity="HIGH" grow /></SelectItem>
-                                    <SelectItem value="MEDIUM"><SeverityBadge severity="MEDIUM" grow /></SelectItem>
-                                    <SelectItem value="LOW"><SeverityBadge severity="LOW" grow /></SelectItem>
-                                    <SelectItem value="INFO"><SeverityBadge severity="INFO" grow /></SelectItem>
-                                    <SelectItem value="UNCLASSIFIED"><SeverityBadge severity="UNCLASSIFIED" grow /></SelectItem>
+                                    <SelectItem value="CRITICAL" color="#ef4444">Critical</SelectItem>
+                                    <SelectItem value="HIGH" color="#f97316">High</SelectItem>
+                                    <SelectItem value="MEDIUM" color="#eab308">Medium</SelectItem>
+                                    <SelectItem value="LOW" color="#3b82f6">Low</SelectItem>
+                                    <SelectItem value="INFO" color="#22c55e">Info</SelectItem>
+                                    <SelectItem value="UNCLASSIFIED" color="#6b7280">Unclassified</SelectItem>
                                 </SelectContent>
-                            </Select>
-                            <Select value={vulnStatusFilter} onValueChange={setVulnStatusFilter}>
+                            </EnhancedSelect>
+                            <EnhancedSelect value={vulnStatusFilter} onValueChange={setVulnStatusFilter} colorType="status">
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="ALL">All Statuses</SelectItem>
-                                    <SelectItem value="OPEN"><StatusBadge status="OPEN" grow /></SelectItem>
-                                    <SelectItem value="IN_PROGRESS"><StatusBadge status="IN_PROGRESS" grow /></SelectItem>
-                                    <SelectItem value="RESOLVED"><StatusBadge status="RESOLVED" grow /></SelectItem>
-                                    <SelectItem value="ACCEPTED_RISK"><StatusBadge status="ACCEPTED_RISK" grow /></SelectItem>
-                                    <SelectItem value="FALSE_POSITIVE"><StatusBadge status="FALSE_POSITIVE" grow /></SelectItem>
+                                    <SelectItem value="OPEN" icon={<AlertCircle className="w-3 h-3" style={{ color: '#ef4444' }} />}>Open</SelectItem>
+                                    <SelectItem value="IN_PROGRESS" icon={<Clock className="w-3 h-3" style={{ color: '#3b82f6' }} />}>In Progress</SelectItem>
+                                    <SelectItem value="RESOLVED" icon={<CheckCircle className="w-3 h-3" style={{ color: '#22c55e' }} />}>Resolved</SelectItem>
+                                    <SelectItem value="ACCEPTED_RISK" icon={<AlertTriangle className="w-3 h-3" style={{ color: '#eab308' }} />}>Accepted Risk</SelectItem>
+                                    <SelectItem value="FALSE_POSITIVE" icon={<XCircle className="w-3 h-3" style={{ color: '#6b7280' }} />}>False Positive</SelectItem>
+                                    <SelectItem value="RETEST_PENDING" icon={<RotateCcw className="w-3 h-3" style={{ color: '#a855f7' }} />}>Retest Pending</SelectItem>
+                                    <SelectItem value="RETEST_FAILED" icon={<XCircle className="w-3 h-3" style={{ color: '#ef4444' }} />}>Retest Failed</SelectItem>
                                 </SelectContent>
-                            </Select>
+                            </EnhancedSelect>
                         </div>
 
                         {filteredVulnerabilities.length === 0 ? (
@@ -564,10 +566,10 @@ export default function ProjectDetailPage() {
                                                 >
                                                     <TableCell className="font-medium">{vuln.title}</TableCell>
                                                     <TableCell>
-                                                        <SeverityBadge severity={vuln.severity} grow />
+                                                        <SeverityBadge severity={vuln.severity} />
                                                     </TableCell>
                                                     <TableCell>
-                                                        <StatusBadge status={vuln.status} grow />
+                                                        <StatusBadge status={vuln.status} />
                                                     </TableCell>
                                                     <TableCell>{vuln.cvss_base_score ? Number(vuln.cvss_base_score).toFixed(1) : 'N/A'}</TableCell>
                                                     <TableCell className="text-right">

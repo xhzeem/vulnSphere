@@ -1,10 +1,9 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
 import { formatDistanceToNow, format } from 'date-fns';
-import { FileText } from 'lucide-react';
+import { ProjectStatusBadge } from '@/components/projects/project-status-badge';
 
 interface Project {
     id: string;
@@ -22,66 +21,76 @@ interface RecentProjectsProps {
     projects: Project[];
 }
 
-const STATUS_COLORS = {
-    DRAFT: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
-    IN_REVIEW: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    FINAL: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    ARCHIVED: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-};
-
 export function RecentProjects({ projects }: RecentProjectsProps) {
     if (projects.length === 0) {
         return (
-            <Card>
-                <CardHeader>
-                    <CardTitle>Recent Projects</CardTitle>
-                    <CardDescription>Latest security assessment projects</CardDescription>
-                </CardHeader>
-                <CardContent className="text-muted-foreground">
+            <div className="space-y-4">
+                <div className="space-y-1">
+                    <h2 className="text-2xl font-semibold tracking-tight">Recent Projects</h2>
+                    <p className="text-sm text-muted-foreground">Latest security assessment projects</p>
+                </div>
+                <div className="rounded-lg border bg-card text-muted-foreground p-8 text-center">
                     No projects found
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         );
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Recent Projects</CardTitle>
-                <CardDescription>Latest security assessment projects</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
+        <div className="space-y-4">
+            <div className="space-y-1">
+                <h2 className="text-2xl font-semibold tracking-tight">Recent Projects</h2>
+                <p className="text-sm text-muted-foreground">Latest security assessment projects</p>
+            </div>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Project</TableHead>
+                        <TableHead>Company</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Vulnerabilities</TableHead>
+                        <TableHead className="text-right">Date</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
                     {projects.map((project) => (
-                        <div key={project.id} className="flex items-start gap-4 border-b pb-4 last:border-0 last:pb-0">
-                            <div className="mt-1">
-                                <FileText className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                            <div className="flex-1 space-y-1">
+                        <TableRow key={project.id}>
+                            <TableCell className="font-medium">
                                 <Link
                                     href={`/project/${project.id}`}
-                                    className="font-medium hover:underline"
+                                    className="hover:underline"
                                 >
                                     {project.title}
                                 </Link>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <span>{project.company_name}</span>
-                                    <span>•</span>
-                                    <span>{format(new Date(project.start_date), 'MMM d')} - {format(new Date(project.end_date), 'MMM d, yyyy')}</span>
-                                    <span>•</span>
-                                    <span>{project.vulnerability_count} {project.vulnerability_count === 1 ? 'vulnerability' : 'vulnerabilities'}</span>
+                            </TableCell>
+                            <TableCell>
+                                <Link
+                                    href={`/companies/${project.company_id}`}
+                                    className="text-sm text-muted-foreground hover:underline"
+                                >
+                                    {project.company_name}
+                                </Link>
+                            </TableCell>
+                            <TableCell>
+                                <ProjectStatusBadge status={project.status} />
+                            </TableCell>
+                            <TableCell>
+                                <span className="inline-flex items-center justify-center w-8 h-6 rounded-md bg-blue-50 text-blue-700 text-sm font-medium">
+                                    {project.vulnerability_count || 0}
+                                </span>
+                            </TableCell>
+                            <TableCell className="text-right text-muted-foreground">
+                                <div className="text-sm">
+                                    {format(new Date(project.start_date), 'MMM d')} - {format(new Date(project.end_date), 'MMM d, yyyy')}
                                 </div>
-                                <div className="text-xs text-muted-foreground">
+                                <div className="text-xs">
                                     Created {formatDistanceToNow(new Date(project.created_at), { addSuffix: true })}
                                 </div>
-                            </div>
-                            <Badge variant="outline" className={STATUS_COLORS[project.status as keyof typeof STATUS_COLORS]}>
-                                {project.status.replace('_', ' ')}
-                            </Badge>
-                        </div>
+                            </TableCell>
+                        </TableRow>
                     ))}
-                </div>
-            </CardContent>
-        </Card>
+                </TableBody>
+            </Table>
+        </div>
     );
 }

@@ -71,10 +71,10 @@ export function RecentVulnerabilities({ vulnerabilities }: RecentVulnerabilities
                                 </div>
                             </TableCell>
                             <TableCell>
-                                <SeverityBadge severity={vuln.severity} grow />
+                                <SeverityBadge severity={vuln.severity} />
                             </TableCell>
                             <TableCell>
-                                <StatusBadge status={vuln.status} grow />
+                                <StatusBadge status={vuln.status} />
                             </TableCell>
                             <TableCell className="text-right text-muted-foreground">
                                 {formatDistanceToNow(new Date(vuln.created_at), { addSuffix: true })}

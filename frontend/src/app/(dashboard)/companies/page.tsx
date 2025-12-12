@@ -4,13 +4,15 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, EnhancedSelect } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TablePagination } from '@/components/ui/table-pagination';
 import { CompanyCreateDialog } from '@/components/companies/company-create-dialog';
 import { CompanyEditDialog } from '@/components/companies/company-edit-dialog';
 import { CompanyDeleteDialog } from '@/components/companies/company-delete-dialog';
+import { CompanyStatusBadge } from '@/components/companies/company-status-badge';
 import { Building2, Plus, Eye, Pencil, Trash2, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -39,6 +41,7 @@ export default function CompaniesPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
 
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -68,8 +71,6 @@ export default function CompaniesPage() {
     useEffect(() => {
         fetchCompanies();
     }, []);
-
-    const [statusFilter, setStatusFilter] = useState('all');
 
     useEffect(() => {
         let result = companies;
@@ -130,7 +131,7 @@ export default function CompaniesPage() {
                 )}
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -140,16 +141,16 @@ export default function CompaniesPage() {
                         className="pl-8"
                     />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[180px]">
+                <EnhancedSelect value={statusFilter} onValueChange={setStatusFilter} colorType="companyStatus">
+                    <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="active" color="#22c55e">Active</SelectItem>
+                        <SelectItem value="inactive" color="#ef4444">Inactive</SelectItem>
                     </SelectContent>
-                </Select>
+                </EnhancedSelect>
             </div>
 
             {loading ? (
@@ -177,16 +178,16 @@ export default function CompaniesPage() {
             ) : (
                 <>
                     <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead>Projects</TableHead>
-                                    <TableHead>Assets</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    {showActions && <TableHead className="text-right">Actions</TableHead>}
-                                </TableRow>
-                            </TableHeader>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Projects</TableHead>
+                                <TableHead>Assets</TableHead>
+                                <TableHead>Status</TableHead>
+                                {showActions && <TableHead className="text-right">Actions</TableHead>}
+                            </TableRow>
+                        </TableHeader>
                             <TableBody>
                                 {paginatedCompanies.map((company) => (
                                     <TableRow
@@ -194,7 +195,7 @@ export default function CompaniesPage() {
                                         onClick={() => handleRowClick(company.id)}
                                         className="cursor-pointer hover:bg-muted/50"
                                     >
-                                        <TableCell className="font-medium">{company.name}</TableCell>
+                                        <TableCell className="font-medium text-gray-900 dark:text-gray-100">{company.name}</TableCell>
                                         <TableCell>{company.contact_email}</TableCell>
                                         <TableCell>
                                             <span className="inline-flex items-center justify-center w-8 h-6 rounded-md bg-blue-50 text-blue-700 text-sm font-medium">
@@ -207,15 +208,7 @@ export default function CompaniesPage() {
                                             </span>
                                         </TableCell>
                                         <TableCell>
-                                            {company.is_active ? (
-                                                <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700 border border-green-200">
-                                                    Active
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">
-                                                    Inactive
-                                                </span>
-                                            )}
+                                            <CompanyStatusBadge status={company.is_active} />
                                         </TableCell>
                                         {showActions && (
                                             <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>

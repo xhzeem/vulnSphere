@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, EnhancedSelect } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ProjectStatusBadge } from '@/components/projects/project-status-badge';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { TablePagination } from '@/components/ui/table-pagination';
@@ -14,7 +15,7 @@ import api from '@/lib/api';
 import { ProjectEditDialog } from '@/components/projects/project-edit-dialog';
 import { ProjectDeleteDialog } from '@/components/projects/project-delete-dialog';
 import { ProjectCreateDialog } from '@/components/projects/project-create-dialog';
-import { Plus } from 'lucide-react';
+import { Search, Eye, Pencil, Trash2, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { formatStatus } from '@/lib/formatters';
 
@@ -180,7 +181,7 @@ export default function ProjectsPage() {
                     />
                 </div>
                 <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                    <SelectTrigger className="w-full md:w-[200px]">
+                    <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="All Companies" />
                     </SelectTrigger>
                     <SelectContent>
@@ -192,43 +193,43 @@ export default function ProjectsPage() {
                         ))}
                     </SelectContent>
                 </Select>
-                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                    <SelectTrigger className="w-full md:w-[200px]">
+                <EnhancedSelect value={selectedStatus} onValueChange={setSelectedStatus} colorType="projectStatus">
+                    <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="DRAFT">Draft</SelectItem>
-                        <SelectItem value="IN_REVIEW">In Review</SelectItem>
-                        <SelectItem value="FINAL">Final</SelectItem>
-                        <SelectItem value="ARCHIVED">Archived</SelectItem>
+                        <SelectItem value="DRAFT" color="#6b7280">Draft</SelectItem>
+                        <SelectItem value="IN_REVIEW" color="#3b82f6">In Review</SelectItem>
+                        <SelectItem value="FINAL" color="#22c55e">Final</SelectItem>
+                        <SelectItem value="ARCHIVED" color="#f97316">Archived</SelectItem>
                     </SelectContent>
-                </Select>
+                </EnhancedSelect>
             </div>
 
             <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Title</TableHead>
-                            <TableHead>Company</TableHead>
-                            <TableHead>Engagement Type</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Vulnerabilities</TableHead>
-                            <TableHead>Start Date</TableHead>
-                            <TableHead>End Date</TableHead>
-                            {canEdit && <TableHead className="text-right">Actions</TableHead>}
-                        </TableRow>
-                    </TableHeader>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Company</TableHead>
+                        <TableHead>Engagement Type</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Vulnerabilities</TableHead>
+                        <TableHead>Start Date</TableHead>
+                        <TableHead>End Date</TableHead>
+                        {canEdit && <TableHead className="text-right">Actions</TableHead>}
+                    </TableRow>
+                </TableHeader>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-8">
+                                <TableCell colSpan={canEdit ? 9 : 8} className="text-center py-8">
                                     Loading...
                                 </TableCell>
                             </TableRow>
                         ) : projects.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={canEdit ? 9 : 8} className="text-center py-8 text-gray-500">
                                     No projects found
                                 </TableCell>
                             </TableRow>
@@ -239,10 +240,10 @@ export default function ProjectsPage() {
                                     onClick={() => handleRowClick(project.id)}
                                     className="cursor-pointer hover:bg-muted/50"
                                 >
-                                    <TableCell className="font-medium">{project.title}</TableCell>
+                                    <TableCell className="font-medium text-gray-900 dark:text-gray-100">{project.title}</TableCell>
                                     <TableCell>{getCompanyName(project.company)}</TableCell>
                                     <TableCell>{project.engagement_type}</TableCell>
-                                    <TableCell>{getStatusBadge(project.status)}</TableCell>
+                                    <TableCell><ProjectStatusBadge status={project.status} /></TableCell>
                                     <TableCell>
                                         <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
                                             {project.vulnerability_count || 0}
