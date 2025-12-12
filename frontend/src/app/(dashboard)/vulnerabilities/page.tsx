@@ -70,7 +70,7 @@ export default function VulnerabilitiesPage() {
             
             // Get user role to determine if we should filter inactive companies
             // For now, we'll assume we need to check user role - let me add this check
-            const userRes = await fetch('http://localhost:8000/api/v1/auth/user/', {
+            const userRes = await fetch('http://localhost:8000/api/v1/users/me/', {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const userData = await userRes.json();
