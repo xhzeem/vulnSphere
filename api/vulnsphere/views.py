@@ -199,14 +199,20 @@ class ProjectViewSet(CompanyScopedMixin, viewsets.ModelViewSet):
         if company_pk:
             # Nested access - filter by company
             # CompanyScopedMixin already handles company access check
-            return Project.objects.filter(company__pk=company_pk)
+            queryset = Project.objects.filter(company__pk=company_pk)
+        else:
+            # Direct access - filter by user's accessible companies
+            if user.role == 'ADMIN':
+                queryset = Project.objects.all()
+            else:
+                # Clients and Testers only see projects from their assigned companies
+                queryset = Project.objects.filter(company__in=user.companies.all())
         
-        # Direct access - filter by user's accessible companies
-        if user.role == 'ADMIN':
-            return Project.objects.all()
+        # Hide draft projects from clients
+        if user.role == 'CLIENT':
+            queryset = queryset.exclude(status='DRAFT')
         
-        # Clients and Testers only see projects from their assigned companies
-        return Project.objects.filter(company__in=user.companies.all())
+        return queryset
 
 class VulnerabilityViewSet(viewsets.ModelViewSet):
     queryset = Vulnerability.objects.all()
@@ -237,7 +243,13 @@ class VulnerabilityViewSet(viewsets.ModelViewSet):
                 return Vulnerability.objects.none()
         
         # Ensure project belongs to company
-        return Vulnerability.objects.filter(project__pk=project_pk, project__company__pk=company_pk)
+        queryset = Vulnerability.objects.filter(project__pk=project_pk, project__company__pk=company_pk)
+        
+        # Hide draft vulnerabilities from clients
+        if user.role == 'CLIENT':
+            queryset = queryset.exclude(status='DRAFT')
+        
+        return queryset
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

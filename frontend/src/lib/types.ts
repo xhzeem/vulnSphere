@@ -29,7 +29,21 @@ export interface Project {
     start_date?: string;
     end_date?: string;
     summary?: string;
+    scope_description?: string;
     created_at?: string;
+}
+
+export interface Asset {
+    id: string;
+    name: string;
+    type: string;
+    identifier: string;
+    environment: string;
+    is_active: boolean;
+    company: string;
+    description?: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface ReportTemplate {

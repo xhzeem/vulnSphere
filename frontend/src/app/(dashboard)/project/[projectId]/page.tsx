@@ -21,6 +21,7 @@ import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import { MDXEditorComponent } from '@/components/md-editor';
 import { format } from 'date-fns';
+import { Vulnerability, Asset, Project, ReportTemplate } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import {
     Dialog,
@@ -36,43 +37,6 @@ import { StatusBadge } from '@/components/vulnerabilities/status-badge';
 import { useAuth } from '@/hooks/use-auth';
 
 const ITEMS_PER_PAGE = 15;
-
-interface ReportTemplate {
-    id: string;
-    name: string;
-    file: string;
-}
-
-interface Project {
-    id: string;
-    title: string;
-    engagement_type: string;
-    status: string;
-    start_date: string;
-    end_date: string;
-    summary: string;
-    scope_description: string;
-    company: string;
-}
-
-interface Vulnerability {
-    id: string;
-    title: string;
-    code: string;
-    severity: string;
-    status: string;
-    category: string;
-    cvss_base_score: number | null;
-}
-
-interface Asset {
-    id: string;
-    name: string;
-    type: string;
-    identifier: string;
-    environment: string;
-    is_active: boolean;
-}
 
 export default function ProjectDetailPage() {
     const params = useParams();
@@ -190,7 +154,7 @@ export default function ProjectDetailPage() {
     // Filter vulnerabilities
     const filteredVulnerabilities = vulnerabilities.filter(vuln => {
         const matchesSearch = vuln.title.toLowerCase().includes(vulnSearchQuery.toLowerCase()) ||
-            vuln.category.toLowerCase().includes(vulnSearchQuery.toLowerCase());
+            (vuln.category && vuln.category.toLowerCase().includes(vulnSearchQuery.toLowerCase()));
         const matchesSeverity = vulnSeverityFilter === 'ALL' || vuln.severity === vulnSeverityFilter;
         const matchesStatus = vulnStatusFilter === 'ALL' || vuln.status === vulnStatusFilter;
 
@@ -348,7 +312,7 @@ export default function ProjectDetailPage() {
                         <h1 className="text-3xl font-bold tracking-tight">{project.title}</h1>
                         <div className="flex items-center gap-2 mt-1">
                             <p className="text-muted-foreground">{project.engagement_type}</p>
-                            <ProjectStatusBadge status={project.status} />
+                            <ProjectStatusBadge status={project.status || 'DRAFT'} />
                         </div>
                     </div>
                 </div>
@@ -428,7 +392,7 @@ export default function ProjectDetailPage() {
                                     onChange={(e) => setEditFormData({ ...editFormData, start_date: e.target.value })}
                                 />
                             ) : (
-                                <p className="text-sm font-medium mt-1">{new Date(project.start_date).toLocaleDateString()}</p>
+                                <p className="text-sm font-medium mt-1">{project.start_date ? new Date(project.start_date).toLocaleDateString() : 'Not set'}</p>
                             )}
                         </div>
                         <div>
@@ -441,7 +405,7 @@ export default function ProjectDetailPage() {
                                     onChange={(e) => setEditFormData({ ...editFormData, end_date: e.target.value })}
                                 />
                             ) : (
-                                <p className="text-sm font-medium mt-1">{new Date(project.end_date).toLocaleDateString()}</p>
+                                <p className="text-sm font-medium mt-1">{project.end_date ? new Date(project.end_date).toLocaleDateString() : 'Not set'}</p>
                             )}
                         </div>
                     </div>
