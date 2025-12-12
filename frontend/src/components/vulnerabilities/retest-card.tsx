@@ -40,7 +40,6 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
     const [editingRetestId, setEditingRetestId] = useState<string | null>(null);
 
     // Form state
-    const [requestType, setRequestType] = useState<'INITIAL' | 'REQUEST' | 'RETEST'>('RETEST');
     const [status, setStatus] = useState<'PASSED' | 'FAILED' | 'PARTIAL' | null>('PASSED');
     const [notes, setNotes] = useState('');
 
@@ -65,8 +64,8 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
         setSubmitting(true);
         try {
             const payload = {
-                request_type: requestType,
-                status: requestType === 'RETEST' ? status : null,
+                request_type: 'RETEST',
+                status: status,
                 notes_md: notes
             };
 
@@ -79,7 +78,6 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
             }
 
             setNotes('');
-            setRequestType('RETEST');
             setStatus('PASSED');
             setEditingRetestId(null);
             setIsAdding(false);
@@ -94,7 +92,6 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
 
     const handleEdit = (retest: Retest) => {
         setEditingRetestId(retest.id);
-        setRequestType(retest.request_type);
         setStatus(retest.status || 'PASSED');
         setNotes(retest.notes_md || '');
         setIsAdding(true);
@@ -104,7 +101,6 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
         setIsAdding(false);
         setEditingRetestId(null);
         setNotes('');
-        setRequestType('RETEST');
         setStatus('PASSED');
     };
 
@@ -202,41 +198,54 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
                 {isAdding && (
                     <div className="border-2 border-dashed rounded-lg p-4 space-y-4 bg-muted/20">
                         <h3 className="font-semibold">{editingRetestId ? 'Edit Entry' : 'New Entry'}</h3>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label>Entry Type</Label>
-                                <Select
-                                    value={requestType}
-                                    onValueChange={(v: 'INITIAL' | 'REQUEST' | 'RETEST') => setRequestType(v)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="RETEST">Record Retest Result</SelectItem>
-                                        <SelectItem value="REQUEST">Request Retest</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {requestType === 'RETEST' && (
-                                <div className="space-y-2">
-                                    <Label>Outcome</Label>
-                                    <Select
-                                        value={status || ''}
-                                        onValueChange={(v: any) => setStatus(v)}
+                                <Label>Outcome</Label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <Button
+                                        type="button"
+                                        variant={status === 'PASSED' ? 'default' : 'outline'}
+                                        className={`flex items-center gap-2 h-12 ${
+                                            status === 'PASSED' 
+                                                ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' 
+                                                : 'hover:bg-green-50 hover:text-green-700 hover:border-green-300 dark:hover:bg-green-950 dark:hover:text-green-400'
+                                        }`}
+                                        onClick={() => setStatus('PASSED')}
                                     >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="PASSED">Passed (Fixed)</SelectItem>
-                                            <SelectItem value="FAILED">Failed (Still Vulnerable)</SelectItem>
-                                            <SelectItem value="PARTIAL">Partial Fix</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                        <CheckCircle2 className="h-4 w-4" />
+                                        <span>Passed</span>
+                                        <span className="text-xs opacity-75">(Fixed)</span>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant={status === 'FAILED' ? 'destructive' : 'outline'}
+                                        className={`flex items-center gap-2 h-12 ${
+                                            status === 'FAILED' 
+                                                ? 'bg-red-600 hover:bg-red-700 text-white border-red-600' 
+                                                : 'hover:bg-red-50 hover:text-red-700 hover:border-red-300 dark:hover:bg-red-950 dark:hover:text-red-400'
+                                        }`}
+                                        onClick={() => setStatus('FAILED')}
+                                    >
+                                        <XCircle className="h-4 w-4" />
+                                        <span>Failed</span>
+                                        <span className="text-xs opacity-75">(Still Vulnerable)</span>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant={status === 'PARTIAL' ? 'default' : 'outline'}
+                                        className={`flex items-center gap-2 h-12 ${
+                                            status === 'PARTIAL' 
+                                                ? 'bg-amber-600 hover:bg-amber-700 text-white border-amber-600' 
+                                                : 'hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 dark:hover:bg-amber-950 dark:hover:text-amber-400'
+                                        }`}
+                                        onClick={() => setStatus('PARTIAL')}
+                                    >
+                                        <AlertCircle className="h-4 w-4" />
+                                        <span>Partial</span>
+                                        <span className="text-xs opacity-75">(Partial Fix)</span>
+                                    </Button>
                                 </div>
-                            )}
+                            </div>
                         </div>
 
                         <div className="space-y-2">
@@ -244,7 +253,7 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
                             <MDXEditorComponent
                                 value={notes}
                                 onChange={setNotes}
-                                placeholder={requestType === 'RETEST' ? "Describe validation steps..." : "Describe request..."}
+                                placeholder="Describe validation steps and results..."
                                 companyId={companyId}
                                 projectId={projectId}
                                 vulnerabilityId={vulnerabilityId}
