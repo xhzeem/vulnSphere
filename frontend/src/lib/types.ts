@@ -92,6 +92,7 @@ export interface Vulnerability {
     cvss_base_score: number | null;
     cvss_vector: string;
     details_md: string;
+    details_html?: string; // For templates that use HTML instead of markdown
     references: string[];
     created_at: string;
     updated_at: string;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock, Save, X, Pencil, History, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { MDXEditorComponent } from '@/components/md-editor';
-import ReactMarkdown from 'react-markdown';
+import { SimpleEditor, SimpleEditorMethods } from '@/components/tiptap-templates/simple/simple-editor';
+import { SimpleRenderer } from '@/components/tiptap-templates/simple/simple-renderer';
 import { useAuth } from '@/hooks/use-auth';
+import { getTemplate } from '@/lib/tiptap-templates';
 
 interface Retest {
     id: string;
@@ -28,20 +29,40 @@ interface RetestCardProps {
     companyId: string;
     projectId: string;
     vulnerabilityId: string;
+    editingRetestId?: string;
+    onRetestUpdated?: () => void;
     onImageUploaded?: () => void; // Callback for when images are uploaded
 }
 
-export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploaded }: RetestCardProps) {
+export function RetestCard({ companyId, projectId, vulnerabilityId, editingRetestId, onRetestUpdated, onImageUploaded }: RetestCardProps) {
     const { canEdit } = useAuth();
     const [retests, setRetests] = useState<Retest[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isAdding, setIsAdding] = useState(false);
+    const [isAddingNew, setIsAddingNew] = useState(false);
+    const [editingRetest, setEditingRetest] = useState<Retest | null>(null);
     const [submitting, setSubmitting] = useState(false);
-    const [editingRetestId, setEditingRetestId] = useState<string | null>(null);
-
-    // Form state
-    const [status, setStatus] = useState<'PASSED' | 'FAILED' | 'PARTIAL' | null>('PASSED');
     const [notes, setNotes] = useState('');
+    const [status, setStatus] = useState<'PASSED' | 'FAILED' | 'PARTIAL' | null>(null);
+    const [requestType, setRequestType] = useState<'INITIAL' | 'REQUEST' | 'RETEST'>('RETEST');
+    const editorRef = useRef<SimpleEditorMethods>(null);
+
+    const handleInsertAttachment = (attachment: any) => {
+        if (editorRef.current) {
+            // Check if the attachment is an image
+            const isImage = attachment.file_name.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
+            
+            if (isImage) {
+                // Insert as actual image using TipTap's image node
+                const imageHtml = `<img src="${attachment.file}" alt="${attachment.file_name}" />`;
+                editorRef.current.insertContent(imageHtml);
+            } else {
+                // Insert as markdown link for non-image files
+                const linkText = `[${attachment.file_name}](${attachment.file})`;
+                editorRef.current.insertContent(linkText);
+            }
+            editorRef.current.focus();
+        }
+    };
 
     const fetchRetests = async () => {
         try {
@@ -64,14 +85,13 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
         setSubmitting(true);
         try {
             const payload = {
-                request_type: 'RETEST',
                 status: status,
-                notes_md: notes
+                notes_md: notes,
             };
 
-            if (editingRetestId) {
+            if (editingRetest) {
                 // Update existing
-                await api.patch(`/companies/${companyId}/projects/${projectId}/vulnerabilities/${vulnerabilityId}/retests/${editingRetestId}/`, payload);
+                await api.patch(`/companies/${companyId}/projects/${projectId}/vulnerabilities/${vulnerabilityId}/retests/${editingRetest.id}/`, payload);
             } else {
                 // Create new
                 await api.post(`/companies/${companyId}/projects/${projectId}/vulnerabilities/${vulnerabilityId}/retests/`, payload);
@@ -79,8 +99,8 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
 
             setNotes('');
             setStatus('PASSED');
-            setEditingRetestId(null);
-            setIsAdding(false);
+            setEditingRetest(null);
+            setIsAddingNew(false);
 
             fetchRetests();
         } catch (error) {
@@ -91,17 +111,24 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
     };
 
     const handleEdit = (retest: Retest) => {
-        setEditingRetestId(retest.id);
+        setEditingRetest(retest);
         setStatus(retest.status || 'PASSED');
         setNotes(retest.notes_md || '');
-        setIsAdding(true);
+        setIsAddingNew(true);
     };
 
     const handleCancel = () => {
-        setIsAdding(false);
-        setEditingRetestId(null);
+        setIsAddingNew(false);
+        setEditingRetest(null);
         setNotes('');
         setStatus('PASSED');
+    };
+
+    const handleAddNew = () => {
+        setEditingRetest(null);
+        setNotes(getTemplate('NEW_RETEST'));
+        setStatus('PASSED');
+        setIsAddingNew(true);
     };
 
     const handleDelete = async (retest: Retest) => {
@@ -185,8 +212,8 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
                     <History className="h-4 w-4" />
                     <CardTitle className="text-base font-medium">Retest History ({retests.length})</CardTitle>
                 </div>
-                {!isAdding && canEdit && (
-                    <Button size="sm" onClick={() => setIsAdding(true)}>
+                {!isAddingNew && canEdit && (
+                    <Button size="sm" onClick={handleAddNew}>
                         <Plus className="h-4 w-4 mr-2" />
                         Add Entry
                     </Button>
@@ -194,9 +221,9 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
             </CardHeader>
             <CardContent className="space-y-4">
                 {/* Add New Entry Form */}
-                {isAdding && (
+                {isAddingNew && (
                     <div className="border-2 border-dashed rounded-lg p-4 space-y-4 bg-muted/20">
-                        <h3 className="font-semibold">{editingRetestId ? 'Edit Entry' : 'New Entry'}</h3>
+                        <h3 className="font-semibold">{editingRetest ? 'Edit Entry' : 'New Entry'}</h3>
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label>Outcome</Label>
@@ -248,9 +275,10 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Notes (Markdown)</Label>
-                            <MDXEditorComponent
-                                value={notes}
+                            <Label>Notes</Label>
+                            <SimpleEditor
+                                ref={editorRef}
+                                content={notes}
                                 onChange={setNotes}
                                 placeholder="Describe validation steps and results..."
                                 companyId={companyId}
@@ -269,7 +297,7 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
                             </Button>
                             <Button size="sm" onClick={handleSubmit} disabled={submitting || !notes}>
                                 <Save className="h-4 w-4 mr-2" />
-                                {submitting ? 'Saving...' : (editingRetestId ? 'Update' : 'Save Entry')}
+                                {submitting ? 'Saving...' : (editingRetest ? 'Update' : 'Save Entry')}
                             </Button>
                         </div>
                     </div>
@@ -332,14 +360,8 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, onImageUploa
                                     </div>
 
                                     {retest.notes_md && (
-                                        <div className="prose prose-sm dark:prose-invert max-w-none mt-2 p-4 bg-muted/30 rounded-lg border">
-                                            <ReactMarkdown
-                                                components={{
-                                                    img: ({ node, ...props }) => <img {...props} src={props.src || undefined} alt={props.alt || ''} />
-                                                }}
-                                            >
-                                                {retest.notes_md}
-                                            </ReactMarkdown>
+                                        <div className="mt-2 p-4 bg-muted/30 rounded-lg border">
+                                            <SimpleRenderer content={retest.notes_md} />
                                         </div>
                                     )}
                                 </div>

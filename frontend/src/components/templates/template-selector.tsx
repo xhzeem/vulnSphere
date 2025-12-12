@@ -21,7 +21,7 @@ interface VulnerabilityTemplate {
     severity: string;
     cvss_base_score?: number;
     cvss_vector?: string;
-    details_md?: string;
+    details_html?: string;
     references?: string[];
 }
 

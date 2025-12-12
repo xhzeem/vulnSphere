@@ -239,7 +239,7 @@ class ReportTemplateSerializer(serializers.ModelSerializer):
 class VulnerabilityTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = VulnerabilityTemplate
-        fields = ['id', 'title', 'severity', 'cvss_base_score', 'cvss_vector', 'details_md', 'references', 'created_at', 'updated_at']
+        fields = ['id', 'title', 'severity', 'cvss_base_score', 'cvss_vector', 'details_html', 'references', 'created_at', 'updated_at']
         read_only_fields = ['created_by']
 
     def create(self, validated_data):

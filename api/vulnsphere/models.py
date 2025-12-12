@@ -265,7 +265,7 @@ class VulnerabilityTemplate(models.Model):
     severity = models.CharField(max_length=20, choices=Vulnerability.Severity.choices)
     cvss_base_score = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True)
     cvss_vector = models.CharField(max_length=100, blank=True)
-    details_md = models.TextField(default='', help_text='Markdown with sections: Description, Impact, Likelihood, Proof of Concept, Steps to Reproduce, Remediation')
+    details_html = models.TextField(help_text='HTML content for template details (converted from markdown during CSV upload)')
     references = models.JSONField(default=list, blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_templates')
     created_at = models.DateTimeField(auto_now_add=True)

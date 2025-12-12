@@ -946,7 +946,7 @@ class VulnerabilityTemplateViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardPagination
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['title', 'details_md']
+    search_fields = ['title', 'details_html']
     filterset_fields = ['severity']
 
     def get_permissions(self):
@@ -1011,6 +1011,7 @@ class VulnerabilityTemplateViewSet(viewsets.ModelViewSet):
         """Bulk import vulnerability templates from CSV"""
         import csv
         import io
+        import markdown2
         
         file = request.FILES.get('file')
         if not file:
@@ -1041,6 +1042,13 @@ class VulnerabilityTemplateViewSet(viewsets.ModelViewSet):
                     
                     template_title = row['title'].strip()
                     
+                    # Convert markdown to HTML for details
+                    details_md = row.get('details_md', '').strip()
+                    details_html = markdown2.markdown(
+                        details_md, 
+                        extras=['tables', 'fenced-code-blocks', 'code-friendly', 'header-ids']
+                    ) if details_md else ''
+                    
                     # Check if template already exists and update it, or create new
                     template, created_new = VulnerabilityTemplate.objects.update_or_create(
                         title=template_title,
@@ -1048,7 +1056,7 @@ class VulnerabilityTemplateViewSet(viewsets.ModelViewSet):
                             'severity': row['severity'].strip().upper(),
                             'cvss_base_score': cvss_score,
                             'cvss_vector': row.get('cvss_vector', '').strip(),
-                            'details_md': row.get('details_md', '').strip(),
+                            'details_html': details_html,
                             'references': references,
                             'created_by': request.user
                         }

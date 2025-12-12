@@ -9,11 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Download, Edit, Trash2, FileText, Image as ImageIcon, File, Paperclip, Upload } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Download, Edit, Trash2, FileText, Image as ImageIcon, File, Paperclip, Upload, MoreHorizontal, Link } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import api from '@/lib/api';
 
-interface Attachment {
+export interface Attachment {
     id: string;
     file: string;
     file_name: string;
@@ -29,13 +30,14 @@ interface AttachmentManagerProps {
     companyId: string;
     projectId: string;
     vulnerabilityId?: string;
+    onInsert?: (attachment: Attachment) => void;
 }
 
 export interface AttachmentManagerRef {
     fetchAttachments: () => void;
 }
 
-export const AttachmentManager = forwardRef<AttachmentManagerRef, AttachmentManagerProps>(({ companyId, projectId, vulnerabilityId }, ref) => {
+export const AttachmentManager = forwardRef<AttachmentManagerRef, AttachmentManagerProps>(({ companyId, projectId, vulnerabilityId, onInsert }, ref) => {
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingAttachment, setEditingAttachment] = useState<Attachment | null>(null);
@@ -390,16 +392,17 @@ export const AttachmentManager = forwardRef<AttachmentManagerRef, AttachmentMana
                         <p className="text-sm">Upload files using the upload button above</p>
                     </div>
                 ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                         {attachments.map((attachment) => (
-                            <div key={attachment.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <div className="flex-shrink-0">
-                                        {getFileIcon(attachment.file_name)}
-                                    </div>
+                            <div 
+                                key={attachment.id} 
+                                className="flex items-center justify-between p-2 border rounded hover:bg-muted/50 transition-colors cursor-pointer"
+                                onClick={() => window.open(attachment.file, '_blank')}
+                            >
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <h3 className="font-medium text-sm truncate" title={attachment.file_name}>
+                                            <h3 className="text-xs truncate" title={attachment.file_name}>
                                                 {attachment.file_name}
                                             </h3>
                                             {attachment.file_size && (
@@ -408,44 +411,58 @@ export const AttachmentManager = forwardRef<AttachmentManagerRef, AttachmentMana
                                                 </Badge>
                                             )}
                                         </div>
-                                        {attachment.description && (
-                                            <p className="text-xs text-muted-foreground mt-1" title={attachment.description}>
-                                                {attachment.description}
-                                            </p>
-                                        )}
                                         <p className="text-xs text-muted-foreground mt-1">
                                             {formatDistanceToNow(new Date(attachment.uploaded_at), { addSuffix: true })} • {attachment.user_name}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1 flex-shrink-0">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="text-xs"
-                                        onClick={() => window.open(attachment.file, '_blank')}
-                                    >
-                                        <Download className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="text-xs"
-                                        onClick={() => openEditDialog(attachment)}
-                                    >
-                                        <Edit className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="text-xs"
-                                        onClick={() => {
-                                            setAttachmentToDelete(attachment);
-                                            setDeleteDialogOpen(true);
-                                        }}
-                                    >
-                                        <Trash2 className="h-3 w-3" />
-                                    </Button>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-xs"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <MoreHorizontal className="h-3 w-3" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openEditDialog(attachment);
+                                                }}
+                                                className="cursor-pointer"
+                                            >
+                                                <Edit className="h-4 w-4 mr-2" />
+                                                Edit
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onInsert?.(attachment);
+                                                }}
+                                                className="cursor-pointer"
+                                            >
+                                                <Link className="h-4 w-4 mr-2" />
+                                                Insert
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setAttachmentToDelete(attachment);
+                                                    setDeleteDialogOpen(true);
+                                                }}
+                                                className="cursor-pointer text-destructive"
+                                            >
+                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </div>
                             </div>
                         ))}

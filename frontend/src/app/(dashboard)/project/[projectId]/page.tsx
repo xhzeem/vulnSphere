@@ -18,8 +18,8 @@ import { VulnerabilityDeleteDialog } from '@/components/vulnerabilities/vulnerab
 import { VulnerabilityCloneDialog } from '@/components/vulnerabilities/vulnerability-clone-dialog';
 import { ArrowLeft, Plus, Pencil, Trash2, Copy, Shield, Search, Eye, Save, X, FileText, Minus, AlertCircle, Clock, CheckCircle, AlertTriangle, XCircle, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
-import ReactMarkdown from 'react-markdown';
-import { MDXEditorComponent } from '@/components/md-editor';
+import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor';
+import { SimpleRenderer } from '@/components/tiptap-templates/simple/simple-renderer';
 import { format } from 'date-fns';
 import { Vulnerability, Asset, Project, ReportTemplate } from '@/lib/types';
 import { Label } from '@/components/ui/label';
@@ -432,15 +432,15 @@ export default function ProjectDetailPage() {
                     <div>
                         <Label>Summary</Label>
                         {isEditing ? (
-                            <MDXEditorComponent
-                                value={editFormData.summary || ''}
+                            <SimpleEditor
+                                content={editFormData.summary || ''}
                                 onChange={(v) => setEditFormData({ ...editFormData, summary: v })}
                                 height={200}
                             />
                         ) : (
                             project.summary && (
-                                <div className="prose prose-sm dark:prose-invert max-w-none mt-2">
-                                    <ReactMarkdown>{project.summary}</ReactMarkdown>
+                                <div className="mt-2">
+                                    <SimpleRenderer content={project.summary} />
                                 </div>
                             )
                         )}

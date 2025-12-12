@@ -1,0 +1,39 @@
+services:
+  # Database service
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: vulnsphere
+      POSTGRES_USER: vulnsphere
+      POSTGRES_PASSWORD: vulnsphere123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vulnsphere"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API service
+  api:
+    build: ./api
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=postgresql://vulnsphere:vulnsphere123@db:5432/vulnsphere
+      - SECRET_KEY=django-insecure-change-me-in-production
+      - ALLOWED_HOSTS=localhost,127.0.0.1,api
+    volumes:
+      - api_media:/app/media
+      - ./api:/app  # Mount for development
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  api_media:

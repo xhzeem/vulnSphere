@@ -1,0 +1,33 @@
+title,severity,cvss_base_score,cvss_vector,details_md,references
+SQL Injection,HIGH,8.5,CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H,"## Description
+SQL injection is a code injection technique that might destroy your database.
+
+## Impact
+- Data breach
+- Authentication bypass
+- Data manipulation
+
+## Proof of Concept
+```sql
+SELECT * FROM users WHERE id = '1' OR '1'='1'
+```
+
+## Remediation
+Use parameterized queries and input validation.",https://owasp.org/sqli
+Cross-Site Scripting (XSS),MEDIUM,6.1,CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N,"## Description
+XSS allows attackers to inject malicious scripts into web pages.
+
+## Impact
+- Session hijacking
+- Data theft
+- Defacement
+
+## Proof of Concept
+```html
+<script>alert('XSS')</script>
+```
+
+## Remediation
+- Sanitize user input
+- Use Content Security Policy
+- Escape output properly",https://owasp.org/xss
