@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { SeverityBadge } from '@/components/vulnerabilities/severity-badge';
 import { StatusBadge } from '@/components/vulnerabilities/status-badge';
+import { useRouter } from 'next/navigation';
 
 interface Vulnerability {
     id: string;
@@ -23,6 +24,8 @@ interface RecentVulnerabilitiesProps {
 }
 
 export function RecentVulnerabilities({ vulnerabilities }: RecentVulnerabilitiesProps) {
+    const router = useRouter();
+
     if (vulnerabilities.length === 0) {
         return (
             <div className="space-y-4">
@@ -55,14 +58,13 @@ export function RecentVulnerabilities({ vulnerabilities }: RecentVulnerabilities
                 </TableHeader>
                 <TableBody>
                     {vulnerabilities.map((vuln) => (
-                        <TableRow key={vuln.id}>
+                        <TableRow 
+                            key={vuln.id}
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => router.push(`/project/${vuln.project_id}/vulnerabilities/${vuln.id}`)}
+                        >
                             <TableCell className="font-medium">
-                                <Link
-                                    href={`/project/${vuln.project_id}/vulnerabilities/${vuln.id}`}
-                                    className="hover:underline"
-                                >
-                                    {vuln.title}
-                                </Link>
+                                {vuln.title}
                             </TableCell>
                             <TableCell>
                                 <div className="flex flex-col text-sm text-muted-foreground">

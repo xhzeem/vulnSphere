@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import Link from 'next/link';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ProjectStatusBadge } from '@/components/projects/project-status-badge';
+import { useRouter } from 'next/navigation';
 
 interface Project {
     id: string;
@@ -22,6 +23,8 @@ interface RecentProjectsProps {
 }
 
 export function RecentProjects({ projects }: RecentProjectsProps) {
+    const router = useRouter();
+
     if (projects.length === 0) {
         return (
             <div className="space-y-4">
@@ -54,22 +57,18 @@ export function RecentProjects({ projects }: RecentProjectsProps) {
                 </TableHeader>
                 <TableBody>
                     {projects.map((project) => (
-                        <TableRow key={project.id}>
+                        <TableRow 
+                            key={project.id}
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => router.push(`/project/${project.id}`)}
+                        >
                             <TableCell className="font-medium">
-                                <Link
-                                    href={`/project/${project.id}`}
-                                    className="hover:underline"
-                                >
-                                    {project.title}
-                                </Link>
+                                {project.title}
                             </TableCell>
                             <TableCell>
-                                <Link
-                                    href={`/companies/${project.company_id}`}
-                                    className="text-sm text-muted-foreground hover:underline"
-                                >
+                                <span className="text-sm text-muted-foreground">
                                     {project.company_name}
-                                </Link>
+                                </span>
                             </TableCell>
                             <TableCell>
                                 <ProjectStatusBadge status={project.status} />

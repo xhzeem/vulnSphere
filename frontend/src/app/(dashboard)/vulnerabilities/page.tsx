@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Enhanced
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 
-import { Search, Plus, AlertCircle, Clock, CheckCircle, AlertTriangle, XCircle, RotateCcw } from 'lucide-react';
+import { Search, Plus, AlertCircle, Clock, CheckCircle, AlertTriangle, XCircle, RotateCcw, FileText } from 'lucide-react';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
@@ -227,6 +227,7 @@ export default function VulnerabilitiesPage() {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="DRAFT" icon={<FileText className="w-3 h-3" style={{ color: '#6b7280' }} />}>Draft</SelectItem>
                         <SelectItem value="OPEN" icon={<AlertCircle className="w-3 h-3" style={{ color: '#ef4444' }} />}>Open</SelectItem>
                         <SelectItem value="IN_PROGRESS" icon={<Clock className="w-3 h-3" style={{ color: '#3b82f6' }} />}>In Progress</SelectItem>
                         <SelectItem value="RESOLVED" icon={<CheckCircle className="w-3 h-3" style={{ color: '#22c55e' }} />}>Resolved</SelectItem>

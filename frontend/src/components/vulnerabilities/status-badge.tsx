@@ -7,7 +7,8 @@ import {
     AlertTriangle, 
     XCircle,
     RotateCcw,
-    Eye
+    Eye,
+    FileText
 } from "lucide-react";
 
 interface StatusBadgeProps {
@@ -22,6 +23,13 @@ const STATUS_CONFIG: Record<string, {
     textColor: string;
     borderColor: string;
 }> = {
+    DRAFT: { 
+        icon: FileText, 
+        text: "Draft", 
+        bg: "bg-gray-50 dark:bg-gray-950", 
+        textColor: "text-gray-700 dark:text-gray-300",
+        borderColor: "border-gray-200 dark:border-gray-800"
+    },
     OPEN: { 
         icon: AlertCircle, 
         text: "Open", 
@@ -74,7 +82,7 @@ const STATUS_CONFIG: Record<string, {
 };
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
-    const config = STATUS_CONFIG[status] || STATUS_CONFIG.OPEN;
+    const config = STATUS_CONFIG[status] || STATUS_CONFIG.DRAFT;
     const Icon = config.icon;
 
     return (
