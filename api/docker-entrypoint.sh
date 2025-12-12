@@ -57,7 +57,7 @@ if os.path.exists(html_template_path):
         with open(html_template_path, 'rb') as f:
             template = ReportTemplate(
                 name='Standard HTML Report Template',
-                description='Professional HTML security assessment report template with executive summary, scope overview, vulnerability summary, and detailed findings sections.'
+                description='Security assessment report template with executive summary, scope overview, vulnerability summary, and detailed findings.'
             )
             template.file.save('standard_template.html', File(f), save=True)
             print("Created HTML report template")
@@ -73,7 +73,7 @@ if os.path.exists(docx_template_path):
         with open(docx_template_path, 'rb') as f:
             template = ReportTemplate(
                 name='Standard DOCX Report Template',
-                description='Professional DOCX security assessment report template with executive summary, scope overview, vulnerability summary, and detailed findings sections.'
+                description='Security assessment report template with executive summary, scope overview, vulnerability summary, and detailed findings.'
             )
             template.file.save('standard_template.docx', File(f), save=True)
             print("Created DOCX report template")
