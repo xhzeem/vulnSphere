@@ -301,35 +301,37 @@ class Command(BaseCommand):
                             'status': random.choice(statuses),
                             'cvss_base_score': vuln_template['cvss_score'],
                             'cvss_vector': vuln_template['cvss_vector'],
-                            'details_md': f'''## Description
-{vuln_template['description']}
+                            'details_md': f'''<h2>Description</h2>
+<p>{vuln_template["description"]}</p>
 
-## Impact
-{vuln_template['impact']}
+<h2>Impact</h2>
+<p>{vuln_template["impact"]}</p>
 
-## Likelihood
-High - This vulnerability can be easily exploited by attackers with minimal technical expertise.
+<h2>Likelihood</h2>
+<p>High - This vulnerability can be easily exploited by attackers with minimal technical expertise.</p>
 
-## Proof of Concept
-```bash
-# Example exploitation command
+<h2>Proof of Concept</h2>
+<pre><code># Example exploitation command
 curl -X POST "https://target.com/endpoint" \
   -d "parameter=malicious_payload" \
-  -H "Content-Type: application/x-www-form-urlencoded"
-```
+  -H "Content-Type: application/x-www-form-urlencoded"</code></pre>
 
-## Steps to Reproduce
-1. Navigate to the affected functionality
-2. Submit malicious input in the vulnerable parameter
-3. Observe the successful exploitation
+<h2>Steps to Reproduce</h2>
+<ol>
+<li>Navigate to the affected functionality</li>
+<li>Submit malicious input in the vulnerable parameter</li>
+<li>Observe the successful exploitation</li>
+</ol>
 
-## Remediation
-{vuln_template['remediation']}
+<h2>Remediation</h2>
+<p>{vuln_template["remediation"]}</p>
 
-## References
-- CWE-79: Cross-site Scripting
-- OWASP Top Ten 2021
-- NIST SP 800-53''',
+<h2>References</h2>
+<ul>
+<li>CWE-79: Cross-site Scripting</li>
+<li>OWASP Top Ten 2021</li>
+<li>NIST SP 800-53</li>
+</ul>''',
                             'references': [
                                 'https://owasp.org/',
                                 'https://cwe.mitre.org/',

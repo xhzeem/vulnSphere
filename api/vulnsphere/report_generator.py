@@ -6,134 +6,8 @@ from django.core.files.base import ContentFile
 from docxtpl import DocxTemplate
 from io import BytesIO
 from .models import GeneratedReport, Project, Company
-import markdown2
 import re
 from pathlib import Path
-
-def render_markdown(text, inline_images=False):
-    """
-    Convert markdown text to clean HTML with code highlighting and optional inline image support.
-    
-    Args:
-        text: Markdown formatted text
-        inline_images: If True, embed images as base64 data URIs (for HTML). 
-                      If False, keep original image paths (for DOCX).
-        
-    Returns:
-        Clean HTML string with syntax highlighting and optionally embedded images
-    """
-    if not text:
-        return ""
-    
-    # Configure markdown2 with extras for code highlighting, tables, etc.
-    extras = [
-        'fenced-code-blocks',  # Support ```language code blocks
-        'code-friendly',       # Better code handling
-        'tables',              # Support markdown tables
-        'break-on-newline',    # Line breaks work as expected
-        'cuddled-lists',       # Better list formatting
-        'header-ids',          # Add IDs to headers
-    ]
-    
-    # Convert markdown to HTML
-    html = markdown2.markdown(text, extras=extras)
-    
-    # Process images and convert to inline base64 data URIs only for HTML reports
-    if inline_images:
-        html = _embed_images_as_base64(html)
-    
-    return html
-
-def _embed_images_as_base64(html):
-    """
-    Find all <img> tags in HTML and convert their src to base64 data URIs.
-    
-    Args:
-        html: HTML string with <img> tags
-        
-    Returns:
-        HTML string with images embedded as base64 data URIs
-    """
-    # Pattern to match img tags with src attribute
-    img_pattern = re.compile(r'<img([^>]*?)src=["\']([^"\']+)["\']([^>]*?)>', re.IGNORECASE)
-    
-    def replace_img(match):
-        before_src = match.group(1)
-        img_path = match.group(2)
-        after_src = match.group(3)
-        
-        # Skip if already a data URI
-        if img_path.startswith('data:'):
-            return match.group(0)
-        
-        # Try to convert to base64
-        base64_uri = _image_to_base64(img_path)
-        if base64_uri:
-            return f'<img{before_src}src="{base64_uri}"{after_src}>'
-        
-        # If conversion fails, return original
-        return match.group(0)
-    
-    return img_pattern.sub(replace_img, html)
-
-def _image_to_base64(image_path):
-    """
-    Convert an image file to a base64 data URI.
-    
-    Args:
-        image_path: Path to the image file (can be relative or absolute)
-        
-    Returns:
-        Base64 data URI string or None if conversion fails
-    """
-    try:
-        # Handle different path formats
-        if image_path.startswith('http://') or image_path.startswith('https://'):
-            # External URLs - skip for now (could implement fetching if needed)
-            return None
-        
-        # Remove leading slash if present and treat as relative to MEDIA_ROOT
-        if image_path.startswith('/'):
-            image_path = image_path.lstrip('/')
-        
-        # Construct full path relative to media root
-        full_path = os.path.join(settings.MEDIA_ROOT, image_path)
-        
-        # Check if file exists
-        if not os.path.exists(full_path):
-            return None
-        
-        # Read the image file
-        with open(full_path, 'rb') as img_file:
-            img_data = img_file.read()
-        
-        # Encode to base64
-        img_base64 = base64.b64encode(img_data).decode('utf-8')
-        
-        # Determine MIME type
-        mime_type, _ = mimetypes.guess_type(full_path)
-        if not mime_type:
-            # Default to common image types based on extension
-            ext = Path(full_path).suffix.lower()
-            mime_map = {
-                '.jpg': 'image/jpeg',
-                '.jpeg': 'image/jpeg',
-                '.png': 'image/png',
-                '.gif': 'image/gif',
-                '.webp': 'image/webp',
-                '.svg': 'image/svg+xml',
-                '.bmp': 'image/bmp',
-            }
-            mime_type = mime_map.get(ext, 'image/png')
-        
-        # Create data URI
-        data_uri = f'data:{mime_type};base64,{img_base64}'
-        return data_uri
-        
-    except Exception as e:
-        # Log error but don't crash
-        print(f"Error converting image to base64: {image_path} - {str(e)}")
-        return None
 
 class ReportGenerator:
     def generate_report(self, template, context, output_format, generated_report_instance):
@@ -203,19 +77,11 @@ class ReportGenerator:
                         return pattern % str(value)
                 except (TypeError, ValueError):
                     return str(pattern) % str(value)
-            
-            # Add markdown filter
-            def markdown_filter(text):
-                """Convert markdown to HTML"""
-                try:
-                    import markdown
-                    return markdown.markdown(text, extensions=['fenced_code', 'codehilite', 'tables'])
                 except ImportError:
                     return text
             
             # Register custom filters
             env.filters['safe_format'] = safe_format
-            env.filters['markdown'] = markdown_filter
             
             # Create template from string
             jinja_template = env.from_string(template_content)
@@ -286,8 +152,8 @@ class ReportGenerator:
                 'title': project.title,
                 'company': project.company.name,
                 'engagement_type': project.engagement_type,
-                'summary': render_markdown(project.summary, inline_images=inline_images),
-                'scope': render_markdown(project.scope_description, inline_images=inline_images),
+                'summary': project.summary,
+                'scope': getattr(project, 'scope_description', '') or '',
                 'start_date': project.start_date.strftime('%B %d, %Y'),
                 'end_date': project.end_date.strftime('%B %d, %Y'),
                 'status': project.get_status_display(),
@@ -318,7 +184,7 @@ class ReportGenerator:
                 'status_code': vuln.status,
                 'cvss_score': str(vuln.cvss_base_score) if vuln.cvss_base_score else 'N/A',
                 'cvss_vector': vuln.cvss_vector,
-                'description': render_markdown(vuln.details_md, inline_images=inline_images),
+                'description': vuln.details_md,
                 'created_at': vuln.created_at.strftime('%B %d, %Y'),
                 'assets': [{'name': a.name, 'url': a.identifier} for a in vuln.assets.all()],
                 'retests': []
@@ -333,7 +199,7 @@ class ReportGenerator:
                     'retest_date': retest.retest_date.strftime('%B %d, %Y'),
                     'performed_by': retest.performed_by.name if retest.performed_by else 'N/A',
                     'requested_by': retest.requested_by.name if retest.requested_by else 'N/A',
-                    'notes': render_markdown(retest.notes_md, inline_images=inline_images),  # Rendered HTML
+                    'notes': retest.notes_md,  # Keep HTML content
                 }
                 vuln_data['retests'].append(retest_data)
             
@@ -368,7 +234,7 @@ class ReportGenerator:
                 'name': company.name,
                 'email': company.contact_email,
                 'address': company.address,
-                'notes': render_markdown(company.notes, inline_images=inline_images),
+                'notes': company.notes,
             },
             'company_severity_counts': company_severity_counts,
             'company_severities': [
