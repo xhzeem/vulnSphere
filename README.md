@@ -5,12 +5,13 @@ A comprehensive multi-tenant vulnerability reporting and management platform bui
 ## 🚀 Features
 
 ### Core Functionality
-- **Multi-tenant Architecture**: Support for multiple companies and projects
-- **Vulnerability Management**: Track, assess, and remediate security findings
-- **Report Generation**: Automated professional security reports in multiple formats
-- **Template System**: Reusable vulnerability and report templates
-- **User Management**: Role-based access control (Admin, Tester, Client)
-- **Activity Logging**: Comprehensive audit trail of all system activities
+- **Multi-Tenant Architecture**: Securely manage multiple clients with isolated data, projects, and assets for each company.
+- **Vulnerability Management**: A complete lifecycle for tracking vulnerabilities from creation to resolution, including status updates, retesting, and risk assessment.
+- **Asset Management**: Define and manage a wide range of assets, including web applications, servers, and mobile apps, and link them to specific projects and vulnerabilities.
+- **Rich Text Editor**: A powerful and intuitive TipTap-based editor for detailed vulnerability descriptions, notes, and comments, with support for markdown, image uploads, and more.
+- **Report Generation**: Generate professional and customizable security reports in DOCX and HTML formats using a flexible template system.
+- **Role-Based Access Control (RBAC)**: Granular permissions for Admins, Testers, and Clients, ensuring users only have access to the information they need.
+- **Activity Logging**: A comprehensive audit trail that logs all significant actions within the system for accountability and security.
 
 ### Technical Stack
 - **Backend**: Django 6.0 with Django REST Framework
@@ -21,27 +22,39 @@ A comprehensive multi-tenant vulnerability reporting and management platform bui
 - **CI/CD**: GitHub Actions with automated testing and security scanning
 
 ### Key Features
-- **Vulnerability Templates**: 500+ pre-loaded security templates
-- **Bulk Import**: CSV upload with duplicate override capability
-- **Report Templates**: HTML and DOCX templates for professional reports
-- **Real-time Updates**: WebSocket support for live collaboration
-- **API Documentation**: OpenAPI/Swagger with interactive testing
-- **Security Focus**: CVSS scoring, severity classification, and remediation tracking
+- **Vulnerability Templates**: Over 500 pre-loaded templates for common vulnerabilities to speed up the reporting process.
+- **Bulk Import/Export**: Easily import and export vulnerabilities and assets using CSV files.
+- **Customizable Report Templates**: Create and manage your own DOCX and HTML report templates for consistent and professional branding.
+- **Advanced Search and Filtering**: Quickly find the information you need with powerful search and filtering capabilities across all modules.
+- **API-First Design**: A comprehensive REST API with OpenAPI/Swagger documentation for easy integration with other tools.
+- **CVSS Scoring**: Utilize CVSS v3.1 for standardized and accurate vulnerability severity assessment.
 
-## 📸 Screenshot
-![Screenshot](https://i.postimg.cc/pVB3w2bm/Screenshot-2025-12-11-at-10-02-18-PM.png)
+### Rich Text Editor Features
+
+VulnSphere includes a powerful and modern rich text editor based on **TipTap**, providing a seamless writing experience for vulnerability details, notes, and comments. Key features include:
+
+- **Full Markdown Support**: Write in markdown and have it automatically converted to rich text.
+- **Image Uploads**: Drag and drop or paste images directly into the editor, which are securely stored as attachments.
+- **Code Blocks**: Syntax highlighting for a variety of programming languages to clearly display code snippets.
+- **Text Formatting**: A full suite of formatting options, including headings, bold, italics, underline, strikethrough, and more.
+- **Lists and Checklists**: Create ordered, unordered, and task lists to organize information.
+- **Blockquotes and Horizontal Rules**: Structure your content for clarity and readability.
+- **Link Management**: Easily add, edit, and remove hyperlinks.
+- **Color Highlighting**: Use different colors to highlight important text.
+
+## 📸 Screenshots
+![Dashboard](https://i.ibb.co/dJwFrZKp/Screenshot-2025-12-13-at-5-36-15-PM.png)
+![Editor](https://i.ibb.co/KxM1vKZV/Screenshot-2025-12-13-at-5-36-51-PM.png)
 
 ## 🛠️ Installation
 
 ### Prerequisites
 - Docker and Docker Compose
-- Node.js 18+ (for frontend development)
-- Python 3.13+ (for backend development)
 
 ### Quick Start
 ```bash
 # Download the compose file
-wget https://raw.githubusercontent.com/xhzeem/VulnSphere/main/compose.standalone.yml
+curl -o compose.standalone.yml https://raw.githubusercontent.com/xhzeem/VulnSphere/main/compose.standalone.yml
 
 # Start all services
 docker compose -f compose.standalone.yml up -d
@@ -73,79 +86,77 @@ REACT_APP_API_URL=http://localhost:8000
 
 ## 🏗️ Development
 
-### Backend Development
-```bash
-cd api
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python manage.py runserver
-```
+### Backend (Django)
 
-### Frontend Development
-```bash
-cd frontend
-npm install
-npm start
-```
+1.  **Navigate to the `api` directory**:
+    ```bash
+    cd api
+    ```
+2.  **Create and activate a virtual environment**:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate
+    ```
+3.  **Install dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+4.  **Run database migrations**:
+    ```bash
+    python manage.py migrate
+    ```
+5.  **Start the development server**:
+    ```bash
+    python manage.py runserver
+    ```
 
-### Database Migrations
-```bash
-# Create migrations
-python manage.py makemigrations
+### Frontend (React)
 
-# Apply migrations
-python manage.py migrate
-```
+1.  **Navigate to the `frontend` directory**:
+    ```bash
+    cd frontend
+    ```
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+3.  **Start the development server**:
+    ```bash
+    npm start
+    ```
+
 
 ## 📚 API Documentation
 
+VulnSphere provides a comprehensive REST API for managing all aspects of the platform. The base URL for the API is `/api/v1/`.
+
 ### Authentication
-```http
-POST /api/v1/auth/login/
-Content-Type: application/json
 
-{
-  "username": "admin@example.com",
-  "password": "admin123"
-}
-```
+- **Login**: `POST /auth/login/`
+- **Logout**: `POST /auth/logout/`
+- **Get Current User**: `GET /users/me/`
 
-### Vulnerability Templates
-```http
-GET /api/v1/vulnerability-templates/
-Authorization: Bearer <token>
+### Core Endpoints
 
-# Bulk Import
-POST /api/v1/vulnerability-templates/bulk-import/
-Content-Type: multipart/form-data
+- **Companies**: `GET, POST /companies/`
+  - `GET, PUT, PATCH, DELETE /companies/{companyId}/`
+- **Projects**: `GET, POST /companies/{companyId}/projects/`
+  - `GET, PUT, PATCH, DELETE /companies/{companyId}/projects/{projectId}/`
+- **Assets**: `GET, POST /companies/{companyId}/assets/`
+  - `GET, PUT, PATCH, DELETE /companies/{companyId}/assets/{assetId}/`
+- **Vulnerabilities**: `GET, POST /companies/{companyId}/projects/{projectId}/vulnerabilities/`
+  - `GET, PUT, PATCH, DELETE /companies/{companyId}/projects/{projectId}/vulnerabilities/{vulnId}/`
 
-file: <csv_file>
-```
+### Additional Endpoints
 
-### Companies & Projects
-```http
-# List Companies
-GET /api/v1/companies/
+- **Comments**: `GET, POST /comments/` (filterable by vulnerability, project, etc.)
+- **Attachments**: `GET, POST /companies/{companyId}/projects/{projectId}/attachments/`
+- **Retests**: `GET, POST /companies/{companyId}/projects/{projectId}/vulnerabilities/{vulnId}/retests/`
+- **Activity Logs**: `GET /activity-logs/` (Admin only)
+- **Report Generation**: `POST /reports/generate/`
+- **Vulnerability Templates**: `GET, POST /vulnerability-templates/`
 
-# Create Company
-POST /api/v1/companies/
-{
-  "name": "Company Name",
-  "description": "Company Description"
-}
-
-# List Projects
-GET /api/v1/projects/
-
-# Create Project
-POST /api/v1/projects/
-{
-  "name": "Project Name",
-  "company": "company-id",
-  "description": "Project Description"
-}
-```
+For a complete and interactive API specification, please refer to the **Swagger/OpenAPI documentation** available at `/api/docs/`.
 
 ## 🔧 Configuration
 
@@ -181,43 +192,50 @@ Images are automatically built and pushed to:
 
 ## 🔒 Security
 
-### Authentication
-- JWT-based authentication with configurable expiration
-- Role-based access control (Admin, Tester, Client)
-- Email/username login support
-- Password strength requirements
+Security is a top priority for VulnSphere. The platform is designed with a multi-layered security approach to protect sensitive data.
+
+### Authentication and Authorization
+
+- **JWT-Based Authentication**: Secure, stateless authentication with configurable token expiration.
+- **Role-Based Access Control (RBAC)**: Three distinct roles (Admin, Tester, Client) with granular permissions to ensure users can only access data and features relevant to their role.
+- **Secure Password Policies**: Enforces strong password requirements and uses modern, secure hashing algorithms.
 
 ### Data Protection
-- Input validation and sanitization
-- SQL injection prevention
-- XSS protection
-- CSRF protection
-- Secure file uploads
 
-### Security Features
-- Activity logging and audit trails
-- Multi-tenant data isolation
-- Encrypted password storage
-- API rate limiting (configurable)
+- **Multi-Tenant Data Isolation**: A robust multi-tenancy model ensures that data for each company is completely isolated and cannot be accessed by other tenants.
+- **Input Validation**: All incoming data is rigorously validated to prevent common web application vulnerabilities.
+- **ORM-Level SQL Injection Protection**: Django's ORM is used for all database queries, providing built-in protection against SQL injection attacks.
+- **XSS and CSRF Protection**: The platform includes measures to prevent Cross-Site Scripting (XSS) and Cross-Site Request Forgery (CSRF) attacks.
+
+### Secure Development and Operations
+
+- **Secure File Uploads**: All file uploads are scanned and stored securely, with measures in place to prevent the execution of malicious files.
+- **Comprehensive Audit Trails**: All significant actions are logged, providing a clear audit trail for security reviews and incident response.
+- **Container Security**: The application is containerized using Docker, with best practices for image security and runtime isolation.
 
 ## 🧪 Testing
 
-### Running Tests
-```bash
-# Backend tests
-cd api
-python manage.py test
+VulnSphere has a comprehensive test suite to ensure code quality and stability.
 
-# Frontend tests
-cd frontend
-npm test
-```
+### Running Tests
+
+-   **Backend (Django)**:
+    ```bash
+    cd api
+    python manage.py test
+    ```
+-   **Frontend (React)**:
+    ```bash
+    cd frontend
+    npm test
+    ```
 
 ### Test Coverage
-- Unit tests for all models and views
-- Integration tests for API endpoints
-- Frontend component tests
-- Security tests for authentication
+
+-   **Unit Tests**: Core business logic, models, and serializers are covered by unit tests.
+-   **Integration Tests**: API endpoints are tested to ensure they behave as expected.
+-   **Component Tests**: React components are tested to verify their functionality and rendering.
+-   **Security Tests**: Specific tests for authentication, authorization, and other security features.
 
 ## 📊 Monitoring
 
