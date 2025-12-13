@@ -290,8 +290,8 @@ class ReportGenerator:
                 'scope': render_markdown(project.scope_description, inline_images=inline_images),
                 'start_date': project.start_date.strftime('%B %d, %Y'),
                 'end_date': project.end_date.strftime('%B %d, %Y'),
-                'status': project.status,
-                'status_display': project.get_status_display(),
+                'status': project.get_status_display(),
+                'status_code': project.status,
             },
             'severity_counts': severity_counts,
             'severities': [
@@ -312,10 +312,10 @@ class ReportGenerator:
             vuln_data = {
                 'id': str(vuln.id),
                 'title': vuln.title,
-                'severity': vuln.severity,
+                'severity': 'Info' if vuln.get_severity_display() == 'Informational' else vuln.get_severity_display(),
                 'severity_display': 'Info' if vuln.get_severity_display() == 'Informational' else vuln.get_severity_display(),
-                'status': vuln.status,
-                'status_display': vuln.get_status_display(),
+                'status': vuln.get_status_display(),
+                'status_code': vuln.status,
                 'cvss_score': str(vuln.cvss_base_score) if vuln.cvss_base_score else 'N/A',
                 'cvss_vector': vuln.cvss_vector,
                 'description': render_markdown(vuln.details_md, inline_images=inline_images),
@@ -388,8 +388,8 @@ class ReportGenerator:
                 'engagement_type': project.engagement_type,
                 'start_date': project.start_date.strftime('%B %d, %Y'),
                 'end_date': project.end_date.strftime('%B %d, %Y'),
-                'status': project.status,
-                'status_display': project.get_status_display(),
+                'status': project.get_status_display(),
+                'status_code': project.status,
                 'vuln_count': project.vulnerabilities.count(),
             })
         

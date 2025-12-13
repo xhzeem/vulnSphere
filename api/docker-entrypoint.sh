@@ -83,20 +83,20 @@ def import_report_template(template_path, template_name, template_description):
 import_report_template(
     '/app/media/report_templates/project_template.html',
     'Project HTML Report Template',
-    'Security assessment report template for individual projects with executive summary, scope overview, vulnerability summary, and detailed findings.'
+    'Security assessment report template for individual projects with executive summary and detailed findings.'
 )
 
 import_report_template(
     '/app/media/report_templates/company_template.html',
     'Company HTML Report Template',
-    'Company-wide security assessment report template with aggregated vulnerability analysis across all projects and executive summary.'
+    'Company-wide security assessment report template with aggregated vulnerability analysis across projects.'
 )
 
 # Import DOCX template
 import_report_template(
-    '/app/media/report_templates/standard_template.docx',
+    '/app/media/report_templates/project_template.docx',
     'Standard DOCX Report Template',
-    'Security assessment report template with executive summary, scope overview, vulnerability summary, and detailed findings.'
+    'Security assessment report template with executive summary, and detailed findings.'
 )
 
 PYTHON_SCRIPT
