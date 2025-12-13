@@ -612,7 +612,7 @@
                 padding: 20mm 0;
 
                 @top-left {
-                    content: "VulnSphere";
+                    content: "Flawtrack";
                     font-size: var(--font-sm);
                     color: var(--primary-dark);
                     font-weight: 700;
@@ -711,7 +711,7 @@
         <div>
             <h1 id="executive-summary">1. Executive Summary</h1>
             <div class="exec-summary-content content-justify">
-                {{project.company}} approached VulnSphere to deliver a {{project.title}}. VulnSphere team conducted the
+                {{project.company}} approached Flawtrack to deliver a {{project.title}}. Flawtrack team conducted the
                 security assessment from {{project.start_date}} to {{project.end_date}}.
                 <br>
                 The primary purpose of this assessment was to identify security vulnerabilities and weaknesses and
@@ -885,8 +885,6 @@
                     <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed var(--gray-300);">
                         <p><strong>{{retest.request_type}}</strong> - {{retest.retest_date}} <span
                                 style="float:right;">Status: <b>{{retest.status}}</b></span></p>
-                        <p style="font-size: var(--font-xs); color: var(--gray-500);">Performed by:
-                            {{retest.performed_by}}</p>
                         <div class="content-justify">{{retest.notes | safe}}</div>
                     </div>
                     {% endfor %}
