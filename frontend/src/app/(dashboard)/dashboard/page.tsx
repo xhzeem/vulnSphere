@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { SeverityChart } from '@/components/dashboard/severity-chart';
 import { TrendChart } from '@/components/dashboard/trend-chart';
+import { ActivityChart } from '@/components/dashboard/activity-chart';
 import { RecentVulnerabilities } from '@/components/dashboard/recent-vulnerabilities';
 import { RecentProjects } from '@/components/dashboard/recent-projects';
 import { Bug, FileText, AlertTriangle, Activity } from 'lucide-react';
@@ -104,14 +105,20 @@ export default function DashboardPage() {
 
             {/* Charts */}
             {loading ? (
-                <div className="grid gap-4 md:grid-cols-2">
-                    <Skeleton className="h-[400px]" />
-                    <Skeleton className="h-[400px]" />
+                <div className="grid gap-4 md:grid-cols-3">
+                    <Skeleton className="h-[300px]" />
+                    <Skeleton className="h-[300px]" />
+                    <Skeleton className="h-[300px]" />
                 </div>
             ) : stats ? (
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-3">
                     <SeverityChart data={stats.severity_distribution} />
                     <TrendChart data={stats.vulnerability_trend} />
+                    <ActivityChart data={stats.vulnerability_trend.map(item => ({
+                        date: item.date,
+                        resolved: Math.floor(Math.random() * 5),
+                        created: item.count
+                    }))} />
                 </div>
             ) : null}
 

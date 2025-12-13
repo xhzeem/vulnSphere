@@ -1,16 +1,17 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 
-interface TrendChartProps {
+interface ActivityChartProps {
     data: {
         date: string;
-        count: number;
+        resolved: number;
+        created: number;
     }[];
 }
 
-export function TrendChart({ data }: TrendChartProps) {
+export function ActivityChart({ data }: ActivityChartProps) {
     const formattedData = data.map(item => ({
         ...item,
         displayDate: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -20,8 +21,8 @@ export function TrendChart({ data }: TrendChartProps) {
         return (
             <Card className="h-full">
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-semibold">Vulnerability Trend</CardTitle>
-                    <CardDescription className="text-xs">New vulnerabilities over the last 30 days</CardDescription>
+                    <CardTitle className="text-base font-semibold">Activity Overview</CardTitle>
+                    <CardDescription className="text-xs">Vulnerability activity over time</CardDescription>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center h-48">
                     <p className="text-muted-foreground text-sm">No data available</p>
@@ -33,12 +34,12 @@ export function TrendChart({ data }: TrendChartProps) {
     return (
         <Card className="h-full">
             <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold">Vulnerability Trend</CardTitle>
-                <CardDescription className="text-xs">New vulnerabilities over the last 30 days</CardDescription>
+                <CardTitle className="text-base font-semibold">Activity Overview</CardTitle>
+                <CardDescription className="text-xs">Vulnerability activity over time</CardDescription>
             </CardHeader>
             <CardContent>
                 <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={formattedData}>
+                    <LineChart data={formattedData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                         <XAxis
                             dataKey="displayDate"
@@ -60,12 +61,23 @@ export function TrendChart({ data }: TrendChartProps) {
                                 fontSize: '12px'
                             }}
                         />
-                        <Bar 
-                            dataKey="count" 
-                            fill="#3b82f6"
-                            radius={[4, 4, 0, 0]}
+                        <Line
+                            type="monotone"
+                            dataKey="resolved"
+                            stroke="#10b981"
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                            activeDot={{ r: 5 }}
                         />
-                    </BarChart>
+                        <Line
+                            type="monotone"
+                            dataKey="created"
+                            stroke="#3b82f6"
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                            activeDot={{ r: 5 }}
+                        />
+                    </LineChart>
                 </ResponsiveContainer>
             </CardContent>
         </Card>

@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 interface SeverityChartProps {
     data: {
@@ -13,62 +13,74 @@ interface SeverityChartProps {
     };
 }
 
-const SEVERITY_COLORS = {
-    critical: '#ef4444', // red-500
-    high: '#f97316',    // orange-500
-    medium: '#eab308',  // yellow-500
-    low: '#3b82f6',     // blue-500
-    info: '#6b7280',    // gray-500
+const COLORS = {
+    critical: '#dc2626',
+    high: '#f97316', 
+    medium: '#f59e0b',
+    low: '#3b82f6',
+    info: '#64748b'
 };
 
 export function SeverityChart({ data }: SeverityChartProps) {
     const chartData = [
-        { name: 'Critical', value: data.critical, color: SEVERITY_COLORS.critical },
-        { name: 'High', value: data.high, color: SEVERITY_COLORS.high },
-        { name: 'Medium', value: data.medium, color: SEVERITY_COLORS.medium },
-        { name: 'Low', value: data.low, color: SEVERITY_COLORS.low },
-        { name: 'Info', value: data.info, color: SEVERITY_COLORS.info },
-    ].filter(item => item.value > 0); // Only show non-zero values
+        { name: 'Critical', value: data.critical, color: COLORS.critical },
+        { name: 'High', value: data.high, color: COLORS.high },
+        { name: 'Medium', value: data.medium, color: COLORS.medium },
+        { name: 'Low', value: data.low, color: COLORS.low },
+        { name: 'Info', value: data.info, color: COLORS.info },
+    ].filter(item => item.value > 0);
 
     if (chartData.length === 0) {
         return (
-            <Card>
-                <CardHeader>
-                    <CardTitle>Vulnerability Distribution</CardTitle>
-                    <CardDescription>By severity level</CardDescription>
+            <Card className="h-full">
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold">Severity Distribution</CardTitle>
+                    <CardDescription className="text-xs">By vulnerability severity level</CardDescription>
                 </CardHeader>
-                <CardContent className="flex items-center justify-center h-64 text-muted-foreground">
-                    No vulnerability data available
+                <CardContent className="flex items-center justify-center h-48">
+                    <p className="text-muted-foreground text-sm">No data available</p>
                 </CardContent>
             </Card>
         );
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Vulnerability Distribution</CardTitle>
-                <CardDescription>By severity level</CardDescription>
+        <Card className="h-full">
+            <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold">Severity Distribution</CardTitle>
+                <CardDescription className="text-xs">By vulnerability severity level</CardDescription>
             </CardHeader>
             <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
                         <Pie
                             data={chartData}
                             cx="50%"
                             cy="50%"
-                            labelLine={false}
-                            label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
-                            outerRadius={80}
-                            fill="#8884d8"
+                            innerRadius={40}
+                            outerRadius={70}
+                            paddingAngle={2}
                             dataKey="value"
+                            stroke="none"
                         >
                             {chartData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                         </Pie>
-                        <Tooltip />
-                        <Legend />
+                        <Tooltip 
+                            contentStyle={{
+                                backgroundColor: 'white',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '6px',
+                                fontSize: '12px'
+                            }}
+                        />
+                        <Legend 
+                            verticalAlign="bottom" 
+                            height={36}
+                            iconType="circle"
+                            wrapperStyle={{ fontSize: '12px' }}
+                        />
                     </PieChart>
                 </ResponsiveContainer>
             </CardContent>
