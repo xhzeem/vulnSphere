@@ -85,6 +85,7 @@ export function RetestCard({ companyId, projectId, vulnerabilityId, editingRetes
         setSubmitting(true);
         try {
             const payload = {
+                request_type: editingRetest ? editingRetest.request_type : 'RETEST',
                 status: status,
                 notes_md: notes,
             };
