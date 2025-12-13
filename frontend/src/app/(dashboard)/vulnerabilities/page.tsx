@@ -153,8 +153,8 @@ export default function VulnerabilitiesPage() {
 
     const getPaginatedVulnerabilities = () => {
         const filtered = getFilteredVulnerabilities();
-        const startIndex = (currentPage - 1) * 12;
-        return filtered.slice(startIndex, startIndex + 12);
+        const startIndex = (currentPage - 1) * 15;
+        return filtered.slice(startIndex, startIndex + 15);
     };
 
     const getCompanyName = (projectId: string) => {
@@ -291,7 +291,7 @@ export default function VulnerabilitiesPage() {
             <TablePagination
                 currentPage={currentPage}
                 totalItems={totalFilteredVulns}
-                itemsPerPage={12}
+                itemsPerPage={15}
                 onPageChange={setCurrentPage}
             />
         </div>

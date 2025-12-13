@@ -39,7 +39,7 @@ export function TemplateSelectionDialog({ open, onOpenChange, onTemplateSelect }
         try {
             const params = new URLSearchParams({ 
                 page: page.toString(), 
-                page_size: '10' 
+                page_size: '15' 
             });
             if (search) params.append('search', search);
 
@@ -120,11 +120,11 @@ export function TemplateSelectionDialog({ open, onOpenChange, onTemplateSelect }
                     </div>
 
                     {/* Pagination */}
-                    {totalCount > 10 && (
+                    {totalCount > 15 && (
                         <TablePagination
                             currentPage={page}
                             totalItems={totalCount}
-                            itemsPerPage={10}
+                            itemsPerPage={15}
                             onPageChange={setPage}
                         />
                     )}

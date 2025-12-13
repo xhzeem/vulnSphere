@@ -50,7 +50,7 @@ export function TemplatesTable() {
     const fetchTemplates = async () => {
         try {
             setLoading(true);
-            const params = new URLSearchParams({ page: page.toString(), page_size: '12' });
+            const params = new URLSearchParams({ page: page.toString(), page_size: '15' });
             if (search) params.append('search', search);
             if (selectedSeverity !== 'all') params.append('severity', selectedSeverity);
 
@@ -192,7 +192,7 @@ export function TemplatesTable() {
             <TablePagination
                 currentPage={page}
                 totalItems={totalCount}
-                itemsPerPage={12}
+                itemsPerPage={15}
                 onPageChange={setPage}
             />
 
