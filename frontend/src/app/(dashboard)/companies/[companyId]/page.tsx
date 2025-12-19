@@ -466,7 +466,9 @@ export default function CompanyDetailPage() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <ProjectStatusBadge status={project.status} />
-                                                <Badge variant="secondary">{project.vulnerability_count || 0} vulns</Badge>
+                                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
+                                                    {project.vulnerability_count || 0} vulns
+                                                </Badge>
                                             </div>
                                         </div>
                                     ))}
@@ -494,7 +496,7 @@ export default function CompanyDetailPage() {
                                                 <p className="text-sm text-muted-foreground">{asset.identifier}</p>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <Badge variant="secondary">{getTypeLabel(asset.type)}</Badge>
+                                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800">{getTypeLabel(asset.type)}</Badge>
                                                 <AssetStatusBadge status={asset.is_active} />
                                             </div>
                                         </div>
@@ -687,7 +689,7 @@ export default function CompanyDetailPage() {
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between">
                                                 <ProjectStatusBadge status={project.status} />
-                                                <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
+                                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
                                                     {project.vulnerability_count || 0} vulns
                                                 </Badge>
                                             </div>
@@ -832,7 +834,7 @@ export default function CompanyDetailPage() {
                                         <TableRow key={asset.id} className="cursor-pointer hover:bg-muted/50">
                                             <TableCell className="font-medium">{asset.name}</TableCell>
                                             <TableCell>
-                                                <Badge variant="secondary">{getTypeLabel(asset.type)}</Badge>
+                                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800">{getTypeLabel(asset.type)}</Badge>
                                             </TableCell>
                                             <TableCell>{asset.identifier}</TableCell>
                                             <TableCell>
