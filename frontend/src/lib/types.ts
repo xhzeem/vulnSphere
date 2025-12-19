@@ -100,4 +100,5 @@ export interface Vulnerability {
     cve_id?: string;
     affected_asset?: string;
     recommendation?: string;
+    assets?: string[]; // Array of asset IDs for creation
 }
