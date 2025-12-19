@@ -681,20 +681,10 @@ export default function CompanyDetailPage() {
                                                 <CardTitle className="text-lg line-clamp-2">{project.title}</CardTitle>
                                                 <p className="text-sm text-muted-foreground mt-1">{project.engagement_type}</p>
                                             </div>
-                                            {canEdit && (
-                                                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                                                    <Button variant="ghost" size="sm" onClick={(e) => handleProjectEdit(e, project)}>
-                                                        <Pencil className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm" onClick={(e) => handleProjectDelete(e, project)}>
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
-                                                </div>
-                                            )}
                                         </div>
                                     </CardHeader>
                                     <CardContent className="pt-0">
-                                        <div className="space-y-2">
+                                        <div className="space-y-3">
                                             <div className="flex items-center justify-between">
                                                 <ProjectStatusBadge status={project.status} />
                                                 <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
@@ -704,6 +694,26 @@ export default function CompanyDetailPage() {
                                             <div className="text-sm text-muted-foreground">
                                                 <p>{new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}</p>
                                             </div>
+                                            {canEdit && (
+                                                <div className="flex gap-2 pt-2 border-t">
+                                                    <Button variant="outline" size="sm" className="flex-1" 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleProjectEdit(e, project);
+                                                            }}>
+                                                        <Pencil className="h-4 w-4 mr-2" />
+                                                        Edit
+                                                    </Button>
+                                                    <Button variant="outline" size="sm" className="flex-1" 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleProjectDelete(e, project);
+                                                            }}>
+                                                        <Trash2 className="h-4 w-4 mr-2 text-destructive" />
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            )}
                                         </div>
                                     </CardContent>
                                 </Card>
