@@ -40,8 +40,8 @@ export function Sidebar({ className }: SidebarProps) {
     const showAdminLinks = currentUser && isAdmin(currentUser);
 
     return (
-        <div className={cn("pb-12 border-r bg-card relative transition-all duration-300", isCollapsed ? "w-16" : "w-64", className)}>
-            <div className="space-y-4 py-4">
+        <div className={cn("h-screen pb-12 bg-card relative transition-all duration-300 border-r", isCollapsed ? "w-16" : "w-64", className)}>
+            <div className="h-full flex flex-col space-y-4 py-4">
                 <div className="px-3 py-2">
                     <div className={cn("mb-4 px-4 flex items-center", isCollapsed ? "justify-center" : "justify-between")}>
                         {!isCollapsed && <VulnSphereLogo />}
