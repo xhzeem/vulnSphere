@@ -16,7 +16,7 @@ import { ProjectDeleteDialog } from '@/components/projects/project-delete-dialog
 import { AssetCreateDialog } from '@/components/assets/asset-create-dialog';
 import { AssetEditDialog } from '@/components/assets/asset-edit-dialog';
 import { AssetDeleteDialog } from '@/components/assets/asset-delete-dialog';
-import { Plus, FileText, Server, Pencil, Trash2, Eye, Save, X, Upload } from 'lucide-react';
+import { Plus, FileText, Server, Pencil, Trash2, Eye, Save, X, Upload, TrendingUp, Users, Shield, Activity } from 'lucide-react';
 import { CSVImportDialog } from '@/components/ui/csv-import-dialog';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { ProjectStatusBadge } from '@/components/projects/project-status-badge';
 import { AssetStatusBadge } from '@/components/assets/asset-status-badge';
 import { CompanyStatusBadge } from '@/components/companies/company-status-badge';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const ITEMS_PER_PAGE = 15;
 
@@ -105,7 +106,7 @@ export default function CompanyDetailPage() {
     const [saving, setSaving] = useState(false);
 
     // Tab state
-    const [activeTab, setActiveTab] = useState('projects');
+    const [activeTab, setActiveTab] = useState('overview');
 
     const fetchCompanyData = async () => {
         try {
@@ -322,109 +323,282 @@ export default function CompanyDetailPage() {
                 )}
             </div>
 
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle>Company Information</CardTitle>
-                        </div>
-                        {isEditing && (
-                            <div className="flex gap-2">
-                                <Button variant="outline" onClick={() => setIsEditing(false)} disabled={saving}>
-                                    <X className="mr-2 h-4 w-4" />
-                                    Cancel
-                                </Button>
-                                <Button onClick={handleSaveCompany} disabled={saving}>
-                                    <Save className="mr-2 h-4 w-4" />
-                                    {saving ? 'Saving...' : 'Save Changes'}
-                                </Button>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
+                                <p className="text-2xl font-bold">{projects.length}</p>
                             </div>
-                        )}
-                    </div>
-                </CardHeader>
-                <CardContent className="grid gap-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <Label htmlFor="edit-name">Company Name *</Label>
-                            {isEditing ? (
-                                <Input
-                                    id="edit-name"
-                                    value={editFormData.name || ''}
-                                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                                    placeholder="Company Name"
-                                />
-                            ) : (
-                                <p className="text-sm font-medium mt-1">{company.name}</p>
-                            )}
+                            <FileText className="h-8 w-8 text-blue-500" />
                         </div>
-                        <div>
-                            <Label htmlFor="edit-contact-email">Contact Email *</Label>
-                            {isEditing ? (
-                                <Input
-                                    id="edit-contact-email"
-                                    type="email"
-                                    value={editFormData.contact_email || ''}
-                                    onChange={(e) => setEditFormData({ ...editFormData, contact_email: e.target.value })}
-                                    placeholder="Contact Email"
-                                />
-                            ) : (
-                                <p className="text-sm font-medium mt-1">{company.contact_email}</p>
-                            )}
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-address">Address</Label>
-                            {isEditing ? (
-                                <Input
-                                    id="edit-address"
-                                    value={editFormData.address || ''}
-                                    onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
-                                    placeholder="Address"
-                                />
-                            ) : (
-                                <p className="text-sm font-medium mt-1">{company.address || 'N/A'}</p>
-                            )}
-                        </div>
-                    </div>
-                    <div>
-                        <Label htmlFor="edit-notes">Notes</Label>
-                        {isEditing ? (
-                            <Textarea
-                                id="edit-notes"
-                                value={editFormData.notes || ''}
-                                onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
-                                placeholder="Internal Notes"
-                                rows={3}
-                            />
-                        ) : (
-                            <p className="text-sm text-muted-foreground mt-1">{company.notes || 'N/A'}</p>
-                        )}
-                    </div>
-                    {isEditing && (
-                        <div className="space-y-2">
-                            <Label>Status</Label>
-                            <div className="flex items-center space-x-2 mt-1">
-                                <Switch
-                                    id="edit-is-active"
-                                    checked={editFormData.is_active || false}
-                                    onCheckedChange={(checked: boolean) => setEditFormData({ ...editFormData, is_active: checked })}
-                                />
-                                <Label htmlFor="edit-is-active">
-                                    {editFormData.is_active ? 'Active' : 'Inactive'}
-                                </Label>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">Total Assets</p>
+                                <p className="text-2xl font-bold">{assets.length}</p>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                                Inactive companies will be hidden from clients and testers.
-                            </p>
+                            <Server className="h-8 w-8 text-green-500" />
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">Total Vulnerabilities</p>
+                                <p className="text-2xl font-bold">
+                                    {projects.reduce((sum, project) => sum + (project.vulnerability_count || 0), 0)}
+                                </p>
+                            </div>
+                            <Shield className="h-8 w-8 text-red-500" />
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">Active Assets</p>
+                                <p className="text-2xl font-bold">
+                                    {assets.filter(asset => asset.is_active).length}
+                                </p>
+                            </div>
+                            <Activity className="h-8 w-8 text-purple-500" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                <TabsList>
-                    <TabsTrigger value="projects">Projects ({projects.length})</TabsTrigger>
-                    <TabsTrigger value="assets">Assets ({assets.length})</TabsTrigger>
-                </TabsList>
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Projects by Status</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <BarChart data={[
+                                { status: 'Draft', count: projects.filter(p => p.status === 'DRAFT').length },
+                                { status: 'In Review', count: projects.filter(p => p.status === 'IN_REVIEW').length },
+                                { status: 'Final', count: projects.filter(p => p.status === 'FINAL').length },
+                                { status: 'Archived', count: projects.filter(p => p.status === 'ARCHIVED').length },
+                            ]}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="status" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="count" fill="#8884d8" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Asset Distribution</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <PieChart>
+                                <Pie
+                                    data={[
+                                        { name: 'Web App', value: assets.filter(a => a.type === 'WEB_APP').length },
+                                        { name: 'API', value: assets.filter(a => a.type === 'API').length },
+                                        { name: 'Server', value: assets.filter(a => a.type === 'SERVER').length },
+                                        { name: 'Mobile App', value: assets.filter(a => a.type === 'MOBILE_APP').length },
+                                        { name: 'Network Device', value: assets.filter(a => a.type === 'NETWORK_DEVICE').length },
+                                        { name: 'Other', value: assets.filter(a => a.type === 'OTHER').length },
+                                    ]}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={(entry) => `${entry.name}: ${entry.value}`}
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    <Cell fill="#0088FE" />
+                                    <Cell fill="#00C49F" />
+                                    <Cell fill="#FFBB28" />
+                                    <Cell fill="#FF8042" />
+                                    <Cell fill="#8884D8" />
+                                    <Cell fill="#82CA9D" />
+                                </Pie>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+            </div>
+
+                <TabsContent value="overview" className="space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Recent Projects */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <FileText className="h-5 w-5" />
+                                    Recent Projects
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3">
+                                    {projects.slice(0, 5).map((project) => (
+                                        <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                                             onClick={() => handleProjectRowClick(project.id)}>
+                                            <div className="flex-1">
+                                                <h4 className="font-medium">{project.title}</h4>
+                                                <p className="text-sm text-muted-foreground">{project.engagement_type}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <ProjectStatusBadge status={project.status} />
+                                                <Badge variant="secondary">{project.vulnerability_count || 0} vulns</Badge>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {projects.length === 0 && (
+                                        <p className="text-center text-muted-foreground py-4">No projects yet</p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Recent Assets */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Server className="h-5 w-5" />
+                                    Recent Assets
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3">
+                                    {assets.slice(0, 5).map((asset) => (
+                                        <div key={asset.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+                                            <div className="flex-1">
+                                                <h4 className="font-medium">{asset.name}</h4>
+                                                <p className="text-sm text-muted-foreground">{asset.identifier}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="secondary">{getTypeLabel(asset.type)}</Badge>
+                                                <AssetStatusBadge status={asset.is_active} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {assets.length === 0 && (
+                                        <p className="text-center text-muted-foreground py-4">No assets yet</p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="details" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle>Company Information</CardTitle>
+                                </div>
+                                {isEditing && (
+                                    <div className="flex gap-2">
+                                        <Button variant="outline" onClick={() => setIsEditing(false)} disabled={saving}>
+                                            <X className="mr-2 h-4 w-4" />
+                                            Cancel
+                                        </Button>
+                                        <Button onClick={handleSaveCompany} disabled={saving}>
+                                            <Save className="mr-2 h-4 w-4" />
+                                            {saving ? 'Saving...' : 'Save Changes'}
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        </CardHeader>
+                        <CardContent className="grid gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <Label htmlFor="edit-name">Company Name *</Label>
+                                    {isEditing ? (
+                                        <Input
+                                            id="edit-name"
+                                            value={editFormData.name || ''}
+                                            onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                            placeholder="Company Name"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-medium mt-1">{company.name}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <Label htmlFor="edit-contact-email">Contact Email *</Label>
+                                    {isEditing ? (
+                                        <Input
+                                            id="edit-contact-email"
+                                            type="email"
+                                            value={editFormData.contact_email || ''}
+                                            onChange={(e) => setEditFormData({ ...editFormData, contact_email: e.target.value })}
+                                            placeholder="Contact Email"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-medium mt-1">{company.contact_email}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <Label htmlFor="edit-address">Address</Label>
+                                    {isEditing ? (
+                                        <Input
+                                            id="edit-address"
+                                            value={editFormData.address || ''}
+                                            onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                                            placeholder="Address"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-medium mt-1">{company.address || 'N/A'}</p>
+                                    )}
+                                </div>
+                            </div>
+                            <div>
+                                <Label htmlFor="edit-notes">Notes</Label>
+                                {isEditing ? (
+                                    <Textarea
+                                        id="edit-notes"
+                                        value={editFormData.notes || ''}
+                                        onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                                        placeholder="Internal Notes"
+                                        rows={3}
+                                    />
+                                ) : (
+                                    <p className="text-sm text-muted-foreground mt-1">{company.notes || 'N/A'}</p>
+                                )}
+                            </div>
+                            {isEditing && (
+                                <div className="space-y-2">
+                                    <Label>Status</Label>
+                                    <div className="flex items-center space-x-2 mt-1">
+                                        <Switch
+                                            id="edit-is-active"
+                                            checked={editFormData.is_active || false}
+                                            onCheckedChange={(checked: boolean) => setEditFormData({ ...editFormData, is_active: checked })}
+                                        />
+                                        <Label htmlFor="edit-is-active">
+                                            {editFormData.is_active ? 'Active' : 'Inactive'}
+                                        </Label>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        Inactive companies will be hidden from clients and testers.
+                                    </p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
 
                 <TabsContent value="projects" className="space-y-4">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -489,61 +663,52 @@ export default function CompanyDetailPage() {
                             </CardContent>
                         </Card>
                     ) : (
-                        <>
-                            <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Title</TableHead>
-                                            <TableHead>Type</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Vulnerabilities</TableHead>
-                                            <TableHead>Dates</TableHead>
-                                            {canEdit && <TableHead className="text-right">Actions</TableHead>}
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {paginatedProjects.map((project) => (
-                                            <TableRow
-                                                key={project.id}
-                                                onClick={() => handleProjectRowClick(project.id)}
-                                                className="cursor-pointer hover:bg-muted/50"
-                                            >
-                                                <TableCell className="font-medium">{project.title}</TableCell>
-                                                <TableCell>{project.engagement_type}</TableCell>
-                                                <TableCell>
-                                                    <ProjectStatusBadge status={project.status} />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
-                                                        {project.vulnerability_count || 0}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-sm text-muted-foreground">
-                                                    {new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}
-                                                </TableCell>
-                                                {canEdit && (
-                                                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                                                        <div className="flex justify-end gap-2">
-                                                            <Button variant="ghost" size="sm" onClick={(e) => handleProjectEdit(e, project)}>
-                                                                <Pencil className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button variant="ghost" size="sm" onClick={(e) => handleProjectDelete(e, project)}>
-                                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                                            </Button>
-                                                        </div>
-                                                    </TableCell>
-                                                )}
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            <TablePagination
-                                currentPage={projectPage}
-                                totalItems={filteredProjects.length}
-                                itemsPerPage={ITEMS_PER_PAGE}
-                                onPageChange={setProjectPage}
-                            />
-                        </>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {paginatedProjects.map((project) => (
+                                <Card key={project.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                                      onClick={() => handleProjectRowClick(project.id)}>
+                                    <CardHeader className="pb-3">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <CardTitle className="text-lg line-clamp-2">{project.title}</CardTitle>
+                                                <p className="text-sm text-muted-foreground mt-1">{project.engagement_type}</p>
+                                            </div>
+                                            {canEdit && (
+                                                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                                    <Button variant="ghost" size="sm" onClick={(e) => handleProjectEdit(e, project)}>
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="sm" onClick={(e) => handleProjectDelete(e, project)}>
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="pt-0">
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <ProjectStatusBadge status={project.status} />
+                                                <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
+                                                    {project.vulnerability_count || 0} vulns
+                                                </Badge>
+                                            </div>
+                                            <div className="text-sm text-muted-foreground">
+                                                <p>{new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                    {filteredProjects.length > 0 && (
+                        <TablePagination
+                            currentPage={projectPage}
+                            totalItems={filteredProjects.length}
+                            itemsPerPage={ITEMS_PER_PAGE}
+                            onPageChange={setProjectPage}
+                        />
                     )}
                 </TabsContent>
 
@@ -633,51 +798,49 @@ export default function CompanyDetailPage() {
                             </CardContent>
                         </Card>
                     ) : (
-                        <>
-                            <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead>Type</TableHead>
-                                            <TableHead>Identifier</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            {canEdit && <TableHead className="text-right">Actions</TableHead>}
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {paginatedAssets.map((asset) => (
-                                            <TableRow key={asset.id} className="cursor-pointer hover:bg-muted/50">
-                                                <TableCell className="font-medium">{asset.name}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant="secondary">{getTypeLabel(asset.type)}</Badge>
-                                                </TableCell>
-                                                <TableCell>{asset.identifier}</TableCell>
-                                                <TableCell>
-                                                    <AssetStatusBadge status={asset.is_active} />
-                                                </TableCell>
-                                                {canEdit && (
-                                                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                                                        <div className="flex justify-end gap-2">
-                                                            <Button variant="ghost" size="sm" onClick={(e) => handleAssetEdit(e, asset)}>
-                                                                <Pencil className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button variant="ghost" size="sm" onClick={(e) => handleAssetDelete(e, asset)}>
-                                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                                            </Button>
-                                                        </div>
-                                                    </TableCell>
-                                                )}
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            <TablePagination
-                                currentPage={assetPage}
-                                totalItems={filteredAssets.length}
-                                itemsPerPage={ITEMS_PER_PAGE}
-                                onPageChange={setAssetPage}
-                            />
-                        </>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {paginatedAssets.map((asset) => (
+                                <Card key={asset.id} className="hover:shadow-md transition-shadow">
+                                    <CardHeader className="pb-3">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <CardTitle className="text-lg line-clamp-2">{asset.name}</CardTitle>
+                                                <p className="text-sm text-muted-foreground mt-1">{asset.identifier}</p>
+                                            </div>
+                                            {canEdit && (
+                                                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                                    <Button variant="ghost" size="sm" onClick={(e) => handleAssetEdit(e, asset)}>
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="sm" onClick={(e) => handleAssetDelete(e, asset)}>
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="pt-0">
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <Badge variant="secondary">{getTypeLabel(asset.type)}</Badge>
+                                                <AssetStatusBadge status={asset.is_active} />
+                                            </div>
+                                            {asset.description && (
+                                                <p className="text-sm text-muted-foreground line-clamp-2">{asset.description}</p>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                    {filteredAssets.length > 0 && (
+                        <TablePagination
+                            currentPage={assetPage}
+                            totalItems={filteredAssets.length}
+                            itemsPerPage={ITEMS_PER_PAGE}
+                            onPageChange={setAssetPage}
+                        />
                     )}
                 </TabsContent>
             </Tabs>
