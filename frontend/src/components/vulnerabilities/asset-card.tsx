@@ -14,9 +14,12 @@ interface AssetCardProps {
     companyId: string;
     projectId: string;
     vulnerabilityId: string;
+    selectedAssets?: string[];
+    onAssetSelectionChange?: (assets: string[]) => void;
+    isCreating?: boolean;
 }
 
-export function AssetCard({ companyId, projectId, vulnerabilityId }: AssetCardProps) {
+export function AssetCard({ companyId, projectId, vulnerabilityId, selectedAssets = [], onAssetSelectionChange, isCreating = false }: AssetCardProps) {
     const [isAddAssetDialogOpen, setIsAddAssetDialogOpen] = useState(false);
     const [projectAssets, setProjectAssets] = useState<Asset[]>([]);
     const [vulnerabilityAssets, setVulnerabilityAssets] = useState<Asset[]>([]);
@@ -39,56 +42,86 @@ export function AssetCard({ companyId, projectId, vulnerabilityId }: AssetCardPr
     };
 
     const fetchAssets = useCallback(async () => {
-        if (!companyId || !projectId || !vulnerabilityId) return;
+        if (!companyId || !projectId) return;
+        
+        // Always fetch project assets
         try {
             const projectAssetsResponse = await api.get(`/companies/${companyId}/projects/${projectId}/assets/`);
             const projectAssetsData = projectAssetsResponse.data;
             setProjectAssets(projectAssetsData && Array.isArray(projectAssetsData.results) ? projectAssetsData.results : []);
-
-            const vulnerabilityAssetsResponse = await api.get(`/companies/${companyId}/projects/${projectId}/vulnerabilities/${vulnerabilityId}/assets/`);
-            const vulnAssetsData = vulnerabilityAssetsResponse.data;
-            setVulnerabilityAssets(vulnAssetsData && Array.isArray(vulnAssetsData.results) ? vulnAssetsData.results.map((va: any) => va.asset_details) : []);
         } catch (error) {
-            console.error('Failed to fetch assets:', error);
+            console.error('Failed to fetch project assets:', error);
         }
-    }, [companyId, projectId, vulnerabilityId]);
+        
+        // Only fetch vulnerability assets if not creating and we have a valid vulnerability ID
+        if (!isCreating && vulnerabilityId !== "new") {
+            try {
+                const vulnerabilityAssetsResponse = await api.get(`/companies/${companyId}/projects/${projectId}/vulnerabilities/${vulnerabilityId}/assets/`);
+                const vulnAssetsData = vulnerabilityAssetsResponse.data;
+                setVulnerabilityAssets(vulnAssetsData && Array.isArray(vulnAssetsData.results) ? vulnAssetsData.results.map((va: any) => va.asset_details) : []);
+            } catch (error) {
+                console.error('Failed to fetch vulnerability assets:', error);
+            }
+        }
+    }, [companyId, projectId, vulnerabilityId, isCreating]);
 
     useEffect(() => {
-        if (companyId && projectId && vulnerabilityId) {
+        if (companyId && projectId) {
             fetchAssets();
         }
-    }, [fetchAssets, companyId, projectId, vulnerabilityId]);
+    }, [fetchAssets, companyId, projectId]);
 
     const handleAddAsset = async (assetId: string) => {
-        try {
-            await api.post(`/companies/${companyId}/projects/${projectId}/vulnerabilities/${vulnerabilityId}/assets/`, { asset: assetId });
-            // Refresh the asset lists
-            await fetchAssets();
-        } catch (error) {
-            console.error('Failed to add asset:', error);
+        if (isCreating) {
+            // In creation mode, just update the selected assets
+            const newSelectedAssets = [...selectedAssets, assetId];
+            onAssetSelectionChange?.(newSelectedAssets);
+        } else {
+            // In edit mode, make API call to attach asset
+            try {
+                await api.post(`/companies/${companyId}/projects/${projectId}/vulnerabilities/${vulnerabilityId}/assets/`, { asset: assetId });
+                // Refresh the asset lists
+                await fetchAssets();
+            } catch (error) {
+                console.error('Failed to add asset:', error);
+            }
         }
     };
 
     const handleRemoveAsset = async (assetId: string) => {
-        try {
-            // Find the vulnerability-asset link ID
-            const response = await api.get(`/companies/${companyId}/projects/${projectId}/vulnerabilities/${vulnerabilityId}/assets/`);
-            const vulnAssetsData = response.data;
-            
-            if (vulnAssetsData && Array.isArray(vulnAssetsData.results)) {
-                const vulnerabilityAsset = vulnAssetsData.results.find((va: any) => va.asset_details.id === assetId);
-                if (vulnerabilityAsset) {
-                    await api.delete(`/companies/${companyId}/projects/${projectId}/vulnerabilities/${vulnerabilityId}/assets/${vulnerabilityAsset.id}/`);
-                    // Refresh the asset lists
-                    await fetchAssets();
+        if (isCreating) {
+            // In creation mode, just update the selected assets
+            const newSelectedAssets = selectedAssets.filter(id => id !== assetId);
+            onAssetSelectionChange?.(newSelectedAssets);
+        } else {
+            // In edit mode, make API call to detach asset
+            try {
+                // Find the vulnerability-asset link ID
+                const response = await api.get(`/companies/${companyId}/projects/${projectId}/vulnerabilities/${vulnerabilityId}/assets/`);
+                const vulnAssetsData = response.data;
+                
+                if (vulnAssetsData && Array.isArray(vulnAssetsData.results)) {
+                    const vulnerabilityAsset = vulnAssetsData.results.find((va: any) => va.asset_details.id === assetId);
+                    if (vulnerabilityAsset) {
+                        await api.delete(`/companies/${companyId}/projects/${projectId}/vulnerabilities/${vulnerabilityId}/assets/${vulnerabilityAsset.id}/`);
+                        // Refresh the asset lists
+                        await fetchAssets();
+                    }
                 }
+            } catch (error) {
+                console.error('Failed to detach asset:', error);
             }
-        } catch (error) {
-            console.error('Failed to detach asset:', error);
         }
     };
 
-    const availableAssets = projectAssets.filter(pa => !vulnerabilityAssets.some(va => va.id === pa.id));
+    // Determine which assets to display
+    const displayAssets = isCreating 
+        ? projectAssets.filter(asset => selectedAssets.includes(asset.id))
+        : vulnerabilityAssets;
+    
+    const availableAssets = isCreating 
+        ? projectAssets.filter(asset => !selectedAssets.includes(asset.id))
+        : projectAssets.filter(pa => !vulnerabilityAssets.some(va => va.id === pa.id));
 
     return (
         <>
@@ -97,7 +130,7 @@ export function AssetCard({ companyId, projectId, vulnerabilityId }: AssetCardPr
                     <CardTitle className="text-base font-medium flex items-center justify-between">
                         <span className="flex items-center gap-2">
                             <Package className="h-4 w-4" />
-                            Affected Assets ({vulnerabilityAssets.length})
+                            Affected Assets ({displayAssets.length})
                         </span>
                         <Button variant="outline" size="sm" onClick={() => setIsAddAssetDialogOpen(true)}>
                             <Plus className="h-4 w-4 mr-2" />
@@ -106,9 +139,9 @@ export function AssetCard({ companyId, projectId, vulnerabilityId }: AssetCardPr
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {vulnerabilityAssets.length > 0 ? (
+                    {displayAssets.length > 0 ? (
                         <div className="space-y-2">
-                            {vulnerabilityAssets.map(asset => (
+                            {displayAssets.map(asset => (
                                 <div 
                                     key={asset.id} 
                                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
