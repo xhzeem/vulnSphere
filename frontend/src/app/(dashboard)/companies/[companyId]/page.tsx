@@ -806,49 +806,51 @@ export default function CompanyDetailPage() {
                             </CardContent>
                         </Card>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {paginatedAssets.map((asset) => (
-                                <Card key={asset.id} className="hover:shadow-md transition-shadow">
-                                    <CardHeader className="pb-3">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <CardTitle className="text-lg line-clamp-2">{asset.name}</CardTitle>
-                                                <p className="text-sm text-muted-foreground mt-1">{asset.identifier}</p>
-                                            </div>
-                                            {canEdit && (
-                                                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                                                    <Button variant="ghost" size="sm" onClick={(e) => handleAssetEdit(e, asset)}>
-                                                        <Pencil className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm" onClick={(e) => handleAssetDelete(e, asset)}>
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="pt-0">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
+                        <>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Type</TableHead>
+                                        <TableHead>Identifier</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        {canEdit && <TableHead className="text-right">Actions</TableHead>}
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {paginatedAssets.map((asset) => (
+                                        <TableRow key={asset.id} className="cursor-pointer hover:bg-muted/50">
+                                            <TableCell className="font-medium">{asset.name}</TableCell>
+                                            <TableCell>
                                                 <Badge variant="secondary">{getTypeLabel(asset.type)}</Badge>
+                                            </TableCell>
+                                            <TableCell>{asset.identifier}</TableCell>
+                                            <TableCell>
                                                 <AssetStatusBadge status={asset.is_active} />
-                                            </div>
-                                            {asset.description && (
-                                                <p className="text-sm text-muted-foreground line-clamp-2">{asset.description}</p>
+                                            </TableCell>
+                                            {canEdit && (
+                                                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                                    <div className="flex justify-end gap-2">
+                                                        <Button variant="ghost" size="sm" onClick={(e) => handleAssetEdit(e, asset)}>
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="sm" onClick={(e) => handleAssetDelete(e, asset)}>
+                                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
                                             )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
-                    {filteredAssets.length > 0 && (
-                        <TablePagination
-                            currentPage={assetPage}
-                            totalItems={filteredAssets.length}
-                            itemsPerPage={ITEMS_PER_PAGE}
-                            onPageChange={setAssetPage}
-                        />
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                            <TablePagination
+                                currentPage={assetPage}
+                                totalItems={filteredAssets.length}
+                                itemsPerPage={ITEMS_PER_PAGE}
+                                onPageChange={setAssetPage}
+                            />
+                        </>
                     )}
                 </TabsContent>
             </Tabs>
