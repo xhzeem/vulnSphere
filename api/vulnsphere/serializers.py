@@ -1,9 +1,24 @@
 from rest_framework import serializers
+from django.conf import settings
 from .models import (
     User, Company,
     Asset, Project, Vulnerability, VulnerabilityAsset, Retest, Comment, Attachment, ActivityLog, ProjectAsset,
     ReportTemplate, GeneratedReport, VulnerabilityTemplate
 )
+
+
+def get_file_url(file_field):
+    """
+    Build the URL for a file field, using SITE_BASE_URL if configured.
+    Returns absolute URL with public domain in production, or relative path in development.
+    """
+    if not file_field:
+        return None
+    relative_url = file_field.url
+    if settings.SITE_BASE_URL:
+        return f"{settings.SITE_BASE_URL.rstrip('/')}{relative_url}"
+    return relative_url
+
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
@@ -213,6 +228,13 @@ class AttachmentSerializer(serializers.ModelSerializer):
         model = Attachment
         fields = ['id', 'project', 'vulnerability', 'file', 'file_name', 'description', 'uploaded_by', 'uploaded_at']
         read_only_fields = ['project', 'vulnerability', 'uploaded_by']
+    
+    def to_representation(self, instance):
+        """Override to return correct file URL using SITE_BASE_URL."""
+        data = super().to_representation(instance)
+        # Replace file URL with properly formatted URL
+        data['file'] = get_file_url(instance.file)
+        return data
 
     def create(self, validated_data):
         user = self.context['request'].user
@@ -222,6 +244,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
         if 'vulnerability' in self.context: validated_data['vulnerability'] = self.context['vulnerability']
         
         return super().create(validated_data)
+
 
 class ActivityLogSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.name', read_only=True)
@@ -235,6 +258,12 @@ class ReportTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportTemplate
         fields = ['id', 'name', 'description', 'file', 'created_at', 'updated_at']
+    
+    def to_representation(self, instance):
+        """Override to return correct file URL using SITE_BASE_URL."""
+        data = super().to_representation(instance)
+        data['file'] = get_file_url(instance.file)
+        return data
 
 class VulnerabilityTemplateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -257,6 +286,12 @@ class GeneratedReportSerializer(serializers.ModelSerializer):
         fields = ['id', 'project', 'company', 'template', 'template_name', 'project_title', 'company_name', 
                   'file', 'format', 'is_failed', 'error_message', 'created_by', 'created_at']
         read_only_fields = ['created_by', 'is_failed', 'error_message', 'file', 'template_name', 'project_title', 'company_name']
+    
+    def to_representation(self, instance):
+        """Override to return correct file URL using SITE_BASE_URL."""
+        data = super().to_representation(instance)
+        data['file'] = get_file_url(instance.file)
+        return data
 
 class ReportGenerationRequestSerializer(serializers.Serializer):
     template_id = serializers.UUIDField()

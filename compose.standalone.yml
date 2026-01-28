@@ -29,6 +29,7 @@ services:
       - DATABASE_URL=postgresql://vulnsphere:vulnsphere123@db:5432/vulnsphere
       - SECRET_KEY=django-insecure-change-me-in-production
       - ALLOWED_HOSTS=localhost,127.0.0.1,api
+      - SITE_BASE_URL=${SITE_BASE_URL:-}
     volumes:
       - api_media:/app/media
     depends_on:

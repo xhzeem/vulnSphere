@@ -185,3 +185,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Base URL for building absolute URLs for media files
+# Set this to your public API URL in production (e.g., 'https://api.example.com')
+# Leave empty to use relative URLs (works when frontend and API share the same domain)
+SITE_BASE_URL = os.environ.get('SITE_BASE_URL', '')
