@@ -8,6 +8,7 @@ from io import BytesIO
 from .models import GeneratedReport, Project, Company
 import re
 from pathlib import Path
+from bs4 import BeautifulSoup
 
 class ReportGenerator:
     def generate_report(self, template, context, output_format, generated_report_instance):
@@ -125,6 +126,73 @@ class ReportGenerator:
         
         return {str(k): sanitize_value(v) for k, v in context.items()}
     
+    def _embed_images_as_base64(self, html_content):
+        """
+        Convert image URLs in HTML content to base64 data URIs.
+        This makes the generated report self-contained without external dependencies.
+        """
+        if not html_content:
+            return html_content
+        
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        for img in soup.find_all('img'):
+            src = img.get('src', '')
+            
+            # Skip if already a data URI
+            if src.startswith('data:'):
+                continue
+            
+            # Skip if src is null or empty
+            if not src or src == 'null':
+                continue
+            
+            media_path = None
+            
+            # Handle absolute URLs (https://domain/media/attachments/...)
+            if src.startswith('http://') or src.startswith('https://'):
+                # Extract the /media/... portion from the URL
+                if '/media/' in src:
+                    media_portion = src.split('/media/', 1)[1]  # Get everything after /media/
+                    media_path = os.path.join(settings.MEDIA_ROOT, media_portion)
+            # Handle relative URLs (/media/attachments/...)
+            elif src.startswith('/media/'):
+                relative_path = src[7:]  # Remove '/media/' prefix
+                media_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+            elif src.startswith('media/'):
+                relative_path = src[6:]  # Remove 'media/' prefix
+                media_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+            elif src.startswith('/'):
+                # Other absolute path, try to find in media root
+                relative_path = src[1:]  # Remove leading '/'
+                possible_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+                if os.path.exists(possible_path):
+                    media_path = possible_path
+            
+            if media_path and os.path.exists(media_path):
+                try:
+                    # Read file and convert to base64
+                    with open(media_path, 'rb') as f:
+                        file_data = f.read()
+                    
+                    # Determine MIME type
+                    mime_type, _ = mimetypes.guess_type(media_path)
+                    if not mime_type:
+                        mime_type = 'application/octet-stream'
+                    
+                    # Create base64 data URI
+                    b64_data = base64.b64encode(file_data).decode('utf-8')
+                    data_uri = f'data:{mime_type};base64,{b64_data}'
+                    
+                    img['src'] = data_uri
+                except Exception as e:
+                    # Log error but don't fail the report generation
+                    print(f"Warning: Failed to embed image {src}: {e}")
+        
+        return str(soup)
+
+    
+
     def get_project_context(self, project, inline_images=False):
         """Get comprehensive project context for report generation"""
         from .serializers import VulnerabilitySerializer
@@ -184,7 +252,7 @@ class ReportGenerator:
                 'status_code': vuln.status,
                 'cvss_score': str(vuln.cvss_base_score) if vuln.cvss_base_score else 'N/A',
                 'cvss_vector': vuln.cvss_vector,
-                'description': vuln.details_md,
+                'description': self._embed_images_as_base64(vuln.details_md),
                 'created_at': vuln.created_at.strftime('%B %d, %Y'),
                 'assets': [{'name': a.name, 'url': a.identifier} for a in vuln.assets.all()],
                 'retests': []
@@ -199,7 +267,7 @@ class ReportGenerator:
                     'retest_date': retest.retest_date.strftime('%B %d, %Y'),
                     'performed_by': retest.performed_by.name if retest.performed_by else 'N/A',
                     'requested_by': retest.requested_by.name if retest.requested_by else 'N/A',
-                    'notes': retest.notes_md,  # Keep HTML content
+                    'notes': self._embed_images_as_base64(retest.notes_md),  # Convert images to base64
                 }
                 vuln_data['retests'].append(retest_data)
             
