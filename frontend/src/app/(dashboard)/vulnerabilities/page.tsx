@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import api from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, EnhancedSelect } from '@/components/ui/select';
@@ -75,7 +76,7 @@ export default function VulnerabilitiesPage() {
             if (selectedStatus !== 'all') params.append('status', selectedStatus);
 
             // Fetch vulnerabilities with filters
-            const vulnsRes = await fetch(`http://localhost:8000/api/v1/vulnerabilities/?${params}`, {
+            const vulnsRes = await fetch(`${api.defaults.baseURL}/vulnerabilities/?${params}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const vulnsData = await vulnsRes.json();
@@ -86,14 +87,14 @@ export default function VulnerabilitiesPage() {
             setTotalPages(Math.ceil((vulnsData.count || allVulns.length) / 15));
 
             // Fetch companies for dropdown
-            const companiesRes = await fetch('http://localhost:8000/api/v1/companies/', {
+            const companiesRes = await fetch(`${api.defaults.baseURL}/companies/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const companiesData = await companiesRes.json();
             const allCompanies = Array.isArray(companiesData.results) ? companiesData.results : Array.isArray(companiesData) ? companiesData : [];
             
             // Get user role to determine if we should filter inactive companies
-            const userRes = await fetch('http://localhost:8000/api/v1/users/me/', {
+            const userRes = await fetch(`${api.defaults.baseURL}/users/me/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const userData = await userRes.json();
@@ -104,7 +105,7 @@ export default function VulnerabilitiesPage() {
             setCompanies(filteredCompanies);
 
             // Fetch projects for dropdown
-            const projectsRes = await fetch('http://localhost:8000/api/v1/projects/', {
+            const projectsRes = await fetch(`${api.defaults.baseURL}/projects/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const projectsData = await projectsRes.json();

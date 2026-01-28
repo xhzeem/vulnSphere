@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: vulnsphere
       POSTGRES_USER: vulnsphere
-      POSTGRES_PASSWORD: vulnsphere123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -15,6 +15,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    restart: unless-stopped
 
   # Backend API service
   api:
@@ -23,9 +24,10 @@ services:
       - "8000:8000"
     environment:
       - DEBUG=False
-      - DATABASE_URL=postgresql://vulnsphere:vulnsphere123@db:5432/vulnsphere
-      - SECRET_KEY=django-insecure-change-me-in-production
+      - DATABASE_URL=postgresql://vulnsphere:${POSTGRES_PASSWORD}@db:5432/vulnsphere
+      - SECRET_KEY=${SECRET_KEY}
       - ALLOWED_HOSTS=localhost,127.0.0.1,api
+      - SITE_BASE_URL=${SITE_BASE_URL:-}
     volumes:
       - api_media:/app/media
     depends_on:
@@ -35,11 +37,13 @@ services:
 
   # Frontend service
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
     depends_on:
       - api
     restart: unless-stopped

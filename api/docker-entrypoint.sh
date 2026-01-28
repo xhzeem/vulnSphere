@@ -21,12 +21,13 @@ python manage.py shell << 'PYTHON_SCRIPT'
 from django.contrib.auth import get_user_model
 from vulnsphere.models import ReportTemplate, VulnerabilityTemplate
 from django.core.files import File
+from django.db.models import Q
 import os
 
 User = get_user_model()
 
 # Create admin user if it doesn't exist
-if not User.objects.filter(username='admin').exists():
+if not User.objects.filter(Q(role='ADMIN') & Q(is_superuser=True)).exists():
     admin_user = User.objects.create_user(
         email='admin@vulnsphere.com',
         username='admin',
@@ -47,13 +48,14 @@ PYTHON_SCRIPT
 echo "Importing report templates via API..."
 python manage.py shell << 'PYTHON_SCRIPT'
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 import json
 import os
 
 User = get_user_model()
 
 # Get admin user
-admin_user = User.objects.get(username='admin')
+admin_user = User.objects.get(Q(role='ADMIN') & Q(is_superuser=True))
 
 # Function to import report template via API
 def import_report_template(template_path, template_name, template_description):
@@ -105,6 +107,7 @@ PYTHON_SCRIPT
 echo "Importing vulnerability templates via API..."
 python manage.py shell << 'PYTHON_SCRIPT'
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 import json
 import os
 import csv
@@ -114,7 +117,7 @@ import markdown2
 User = get_user_model()
 
 # Get admin user
-admin_user = User.objects.get(username='admin')
+admin_user = User.objects.get(Q(role='ADMIN') & Q(is_superuser=True))
 
 # Check for vulnerability templates directory
 vuln_templates_dir = '/app/media/vuln_templates'
